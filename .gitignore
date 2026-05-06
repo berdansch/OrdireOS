@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment
+.env
+.env.local
+.dev.vars
+
+# Build
+.next/
+dist/
+.turbo/
+
+# Database
+drizzle/
+
+# OS
+.DS_Store
+Thumbs.db

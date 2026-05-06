@@ -1,0 +1,83 @@
+{
+  "project": "OrdireOS",
+  "last_updated": "2026-05-05",
+  "active_milestone": "M4",
+  "milestones": [
+    {
+      "id": "M0",
+      "title": "Fundação do Monorepo",
+      "status": "done",
+      "completed_at": "2026-05-05",
+      "confirmed_by": "Bernardo"
+    },
+    {
+      "id": "M1",
+      "title": "Apps inicializados",
+      "status": "done",
+      "completed_at": "2026-05-05",
+      "confirmed_by": "Bernardo"
+    },
+    {
+      "id": "M2",
+      "title": "Packages placeholder",
+      "status": "done",
+      "completed_at": "2026-05-05",
+      "confirmed_by": "Bernardo"
+    },
+    {
+      "id": "M3",
+      "title": "AGENTS.md + specs.md + Progress Tracker",
+      "status": "done",
+      "completed_at": "2026-05-05",
+      "confirmed_by": "Bernardo"
+    },
+    {
+      "id": "M4",
+      "title": "Banco de dados real",
+      "status": "in_progress",
+      "completed_at": null,
+      "confirmed_by": null,
+      "tasks": [
+        { "id": "M4.1", "title": "Escolher banco: Neon", "done": true },
+        { "id": "M4.2", "title": "Criar schema.ts", "done": true },
+        { "id": "M4.3", "title": "Criar index.ts", "done": true },
+        { "id": "M4.4", "title": "Criar drizzle.config.ts", "done": true },
+        { "id": "M4.5", "title": "Criar seed.ts", "done": true },
+        { "id": "M4.6", "title": "Atualizar packages/db/package.json", "done": true },
+        { "id": "M4.7", "title": "Criar projeto no Neon e configurar DATABASE_URL", "done": false },
+        { "id": "M4.8", "title": "Rodar pnpm db:generate", "done": false },
+        { "id": "M4.9", "title": "Rodar pnpm db:migrate", "done": false },
+        { "id": "M4.10", "title": "Rodar pnpm db:seed", "done": false },
+        { "id": "M4.11", "title": "Validar no Drizzle Studio", "done": false }
+      ]
+    },
+    {
+      "id": "M5",
+      "title": "Autenticação",
+      "status": "pending",
+      "completed_at": null,
+      "confirmed_by": null
+    },
+    {
+      "id": "M6",
+      "title": "Feature core: lançamento de produção",
+      "status": "pending",
+      "completed_at": null,
+      "confirmed_by": null
+    },
+    {
+      "id": "M7",
+      "title": "Dashboard do proprietário",
+      "status": "pending",
+      "completed_at": null,
+      "confirmed_by": null
+    },
+    {
+      "id": "M8",
+      "title": "Deploy",
+      "status": "pending",
+      "completed_at": null,
+      "confirmed_by": null
+    }
+  ]
+}
