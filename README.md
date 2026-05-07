@@ -29,7 +29,7 @@ Replicar a trajetória do Toast para restaurantes — começar pelo problema cot
 | M1 | Apps inicializados | ✅ Concluído |
 | M2 | Packages placeholder | ✅ Concluído |
 | M3 | AGENTS.md + specs.md + Progress Tracker | ✅ Concluído |
-| M4 | Schema Drizzle + migrations + seed + Neon | 🔵 Em andamento |
+| M4 | Schema Drizzle + migrations + seed + Neon | ✅ Concluído |
 | M5 | Autenticação JWT + roles + tenant isolation | ⬜ A fazer |
 | M6 | Feature core: lançamento de produção | ⬜ A fazer |
 | M7 | Dashboard do proprietário | ⬜ A fazer |
