@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { authRoutes } from "./routes/auth";
+import { operationsRoutes } from "./routes/operations";
 
 export type Env = {
   DATABASE_URL: string;
@@ -37,6 +38,7 @@ app.get("/health", (c) => {
 });
 
 app.route("/auth", authRoutes);
+app.route("/operations", operationsRoutes);
 
 app.notFound((c) => c.json({ error: "Rota nao encontrada" }, 404));
 
