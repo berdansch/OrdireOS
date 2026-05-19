@@ -41,6 +41,8 @@ app.route("/auth", authRoutes);
 app.route("/operations", operationsRoutes);
 import { productionOrdersRoutes } from "./routes/production-orders";
 app.route("/production-orders", productionOrdersRoutes);
+import { productionLogsRoutes } from "./routes/production-logs";
+app.route("/production-logs", productionLogsRoutes);
 
 app.notFound((c) => c.json({ error: "Rota nao encontrada" }, 404));
 
