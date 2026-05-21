@@ -1,27 +1,27 @@
 {
   "project": "OrdireOS",
-  "last_updated": "2026-05-05",
-  "active_milestone": "M4",
+  "last_updated": "2026-05-21",
+  "active_milestone": "M7",
   "milestones": [
     {
       "id": "M0",
-      "title": "Fundação do Monorepo",
+      "title": "Fundacao do Monorepo",
       "status": "done",
-      "completed_at": "2026-05-05",
+      "completed_at": "2026-05-01",
       "confirmed_by": "Bernardo"
     },
     {
       "id": "M1",
       "title": "Apps inicializados",
       "status": "done",
-      "completed_at": "2026-05-05",
+      "completed_at": "2026-05-01",
       "confirmed_by": "Bernardo"
     },
     {
       "id": "M2",
       "title": "Packages placeholder",
       "status": "done",
-      "completed_at": "2026-05-05",
+      "completed_at": "2026-05-01",
       "confirmed_by": "Bernardo"
     },
     {
@@ -34,47 +34,48 @@
     {
       "id": "M4",
       "title": "Banco de dados real",
+      "status": "done",
+      "completed_at": "2026-05-05",
+      "confirmed_by": "Bernardo"
+    },
+    {
+      "id": "M5",
+      "title": "Autenticacao JWT + roles + tenant isolation",
+      "status": "done",
+      "completed_at": "2026-05-10",
+      "confirmed_by": "Bernardo"
+    },
+    {
+      "id": "M6",
+      "title": "Feature core: lancamento de producao",
+      "status": "done",
+      "completed_at": "2026-05-21",
+      "confirmed_by": "Bernardo",
+      "tasks": [
+        { "id": "M6.0", "title": "Cadastro de operacoes (owner)", "done": true },
+        { "id": "M6.1", "title": "Estrutura base do modulo costureira", "done": true },
+        { "id": "M6.2", "title": "Logica principal de lancamento", "done": true },
+        { "id": "M6.3", "title": "UX e feedback", "done": true },
+        { "id": "M6.4", "title": "Historico do dia", "done": true },
+        { "id": "M6.5", "title": "Refinamento e commit final", "done": true }
+      ]
+    },
+    {
+      "id": "M7",
+      "title": "Dashboard do proprietario",
       "status": "in_progress",
       "completed_at": null,
       "confirmed_by": null,
       "tasks": [
-        { "id": "M4.1", "title": "Escolher banco: Neon", "done": true },
-        { "id": "M4.2", "title": "Criar schema.ts", "done": true },
-        { "id": "M4.3", "title": "Criar index.ts", "done": true },
-        { "id": "M4.4", "title": "Criar drizzle.config.ts", "done": true },
-        { "id": "M4.5", "title": "Criar seed.ts", "done": true },
-        { "id": "M4.6", "title": "Atualizar packages/db/package.json", "done": true },
-        { "id": "M4.7", "title": "Criar projeto no Neon e configurar DATABASE_URL", "done": false },
-        { "id": "M4.8", "title": "Rodar pnpm db:generate", "done": false },
-        { "id": "M4.9", "title": "Rodar pnpm db:migrate", "done": false },
-        { "id": "M4.10", "title": "Rodar pnpm db:seed", "done": false },
-        { "id": "M4.11", "title": "Validar no Drizzle Studio", "done": false }
+        { "id": "M7.1", "title": "Estrutura base + seletor de periodo", "done": false },
+        { "id": "M7.2", "title": "Metricas de volume", "done": false },
+        { "id": "M7.3", "title": "Metricas de qualidade e custo", "done": false },
+        { "id": "M7.4", "title": "UX e refinamento", "done": false }
       ]
     },
     {
-      "id": "M5",
-      "title": "Autenticação",
-      "status": "pending",
-      "completed_at": null,
-      "confirmed_by": null
-    },
-    {
-      "id": "M6",
-      "title": "Feature core: lançamento de produção",
-      "status": "pending",
-      "completed_at": null,
-      "confirmed_by": null
-    },
-    {
-      "id": "M7",
-      "title": "Dashboard do proprietário",
-      "status": "pending",
-      "completed_at": null,
-      "confirmed_by": null
-    },
-    {
       "id": "M8",
-      "title": "Deploy",
+      "title": "Deploy em producao",
       "status": "pending",
       "completed_at": null,
       "confirmed_by": null
