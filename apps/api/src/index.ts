@@ -43,6 +43,8 @@ app.route("/auth", authRoutes);
 app.route("/operations", operationsRoutes);
 app.route("/production-orders", productionOrdersRoutes);
 app.route("/production-logs", productionLogsRoutes);
+import { dashboardRoutes } from "./routes/dashboard";
+app.route("/dashboard", dashboardRoutes);
 
 app.notFound((c) => c.json({ error: "Rota nao encontrada" }, 404));
 
