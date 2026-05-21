@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "@/lib/auth/api-client";
 
 type ProductionOrder = {
@@ -19,6 +19,34 @@ type Operation = {
   pricePerPiece: string | null;
 };
 
+type LogEntry = {
+  id: string;
+  quantity: number;
+  reworkQuantity: number;
+  shift: "morning" | "afternoon" | "night" | null;
+  loggedAt: string;
+  operationName: string;
+  orderReference: string;
+};
+
+type DailyHistory = {
+  logs: LogEntry[];
+  total: number;
+};
+
+const SHIFT_LABELS: Record<string, string> = {
+  morning: "Manha",
+  afternoon: "Tarde",
+  night: "Noite",
+};
+
+function formatTime(dateStr: string): string {
+  return new Date(dateStr).toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function LoadingSkeleton() {
   return (
     <div className="max-w-lg mx-auto space-y-4 animate-pulse">
@@ -36,6 +64,7 @@ function LoadingSkeleton() {
 export default function CostureiraPage() {
   const [orders, setOrders] = useState<ProductionOrder[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
+  const [history, setHistory] = useState<DailyHistory>({ logs: [], total: 0 });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -45,9 +74,14 @@ export default function CostureiraPage() {
   const [quantity, setQuantity] = useState("");
   const [reworkQuantity, setReworkQuantity] = useState("");
 
-  useEffect(() => { loadData(); }, []);
+  const loadHistory = useCallback(async () => {
+    try {
+      const data = await apiClient<DailyHistory>("/production-logs/my");
+      setHistory(data);
+    } catch {}
+  }, []);
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     try {
       const [ordersData, operationsData] = await Promise.all([
         apiClient<ProductionOrder[]>("/production-orders"),
@@ -67,7 +101,11 @@ export default function CostureiraPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    Promise.all([loadData(), loadHistory()]);
+  }, [loadData, loadHistory]);
 
   function validateForm(): string | null {
     if (!selectedOrderId) return "Selecione uma ordem de producao.";
@@ -99,6 +137,7 @@ export default function CostureiraPage() {
       setReworkQuantity("");
       setSuccess(true);
       setTimeout(() => setSuccess(false), 5000);
+      await loadHistory();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Nao foi possivel registrar a producao.");
     } finally {
@@ -115,9 +154,7 @@ export default function CostureiraPage() {
           <p className="text-sm text-red-600">{error}</p>
         </div>
         <button onClick={() => { setError(""); setLoading(true); loadData(); }}
-          className="text-sm font-medium text-gray-900 underline">
-          Tentar novamente
-        </button>
+          className="text-sm font-medium text-gray-900 underline">Tentar novamente</button>
       </div>
     );
   }
@@ -147,7 +184,7 @@ export default function CostureiraPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto space-y-4">
+    <div className="max-w-lg mx-auto space-y-4 pb-8">
       {success && (
         <div className="bg-green-50 border border-green-100 rounded-2xl px-4 py-4 text-center">
           <p className="text-base">✅</p>
@@ -204,6 +241,41 @@ export default function CostureiraPage() {
             <><span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Registrando...</>
           ) : "Registrar producao"}
         </button>
+      </div>
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-gray-700">Meu dia</h2>
+          {history.total > 0 && (
+            <span className="text-sm font-bold text-gray-900">
+              {history.total} {history.total === 1 ? "peca" : "pecas"}
+            </span>
+          )}
+        </div>
+        {history.logs.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-4">Nenhum lancamento ainda hoje.</p>
+        ) : (
+          <div className="space-y-2">
+            {history.logs.map((log) => (
+              <div key={log.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{log.operationName}</p>
+                  <p className="text-xs text-gray-400">
+                    {log.orderReference}{log.shift ? ` · ${SHIFT_LABELS[log.shift]}` : ""}{" · "}{formatTime(log.loggedAt)}
+                  </p>
+                  {log.reworkQuantity > 0 && (
+                    <p className="text-xs text-orange-500">
+                      {log.reworkQuantity} {log.reworkQuantity === 1 ? "peca" : "pecas"} de retrabalho
+                    </p>
+                  )}
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-gray-900">{log.quantity}</p>
+                  <p className="text-xs text-gray-400">pecas</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
