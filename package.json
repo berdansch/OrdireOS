@@ -1,6 +1,7 @@
 {
   "name": "ordireos",
   "private": true,
+  "packageManager": "pnpm@11.1.3",
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
