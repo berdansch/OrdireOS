@@ -93,6 +93,10 @@ function ShiftBar({ label, value, total, color }: { label: string; value: number
   );
 }
 
+function formatCurrency(value: number): string {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
 function LoadingSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
@@ -109,12 +113,26 @@ function LoadingSkeleton() {
 
 function DashboardContent({ data }: { data: DashboardData }) {
   const totalShift = data.byShift.morning + data.byShift.afternoon + data.byShift.night;
+  const totalCost = data.byOperation.reduce((acc, op) => acc + op.totalCost, 0);
+  const costPerPiece = data.totalPieces > 0 ? totalCost / data.totalPieces : 0;
+  const opsWithCost = data.byOperation.filter((op) => op.pricePerPiece && parseFloat(op.pricePerPiece) > 0);
+
   return (
     <div className="space-y-4">
+
+      {/* Cards principais */}
       <div className="grid grid-cols-2 gap-3">
         <StatCard label="Total produzido" value={data.totalPieces.toLocaleString("pt-BR")} sub="pecas no periodo" highlight />
         <StatCard label="Taxa de retrabalho" value={`${data.reworkRate.toFixed(1)}%`} sub={`${data.totalRework} pecas`} />
+        {totalCost > 0 && (
+          <>
+            <StatCard label="Custo total" value={formatCurrency(totalCost)} sub="no periodo" />
+            <StatCard label="Custo por peca" value={formatCurrency(costPerPiece)} sub="media geral" />
+          </>
+        )}
       </div>
+
+      {/* Producao por turno */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
         <h2 className="text-sm font-semibold text-gray-700">Producao por turno</h2>
         {totalShift === 0 ? (
@@ -127,6 +145,63 @@ function DashboardContent({ data }: { data: DashboardData }) {
           </>
         )}
       </div>
+
+      {/* Custo por operacao */}
+      {opsWithCost.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">Custo por operacao</h2>
+          <div className="space-y-2">
+            {opsWithCost.map((op) => (
+              <div key={op.operationId} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                <div>
+                  <p className="text-sm text-gray-900">{op.operationName}</p>
+                  <p className="text-xs text-gray-400">
+                    {op.quantity.toLocaleString("pt-BR")} pcs x {formatCurrency(parseFloat(op.pricePerPiece!))}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-gray-900">{formatCurrency(op.totalCost)}</p>
+                  {op.reworkQuantity > 0 && (
+                    <p className="text-xs text-orange-500">{op.reworkQuantity} retrabalho</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Qualidade por operacao */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <h2 className="text-sm font-semibold text-gray-700 mb-3">Qualidade por operacao</h2>
+        {data.byOperation.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-4">Sem dados no periodo.</p>
+        ) : (
+          <div className="space-y-2">
+            {data.byOperation.map((op) => {
+              const reworkPct = op.quantity > 0
+                ? ((op.reworkQuantity / op.quantity) * 100)
+                : 0;
+              return (
+                <div key={op.operationId} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                  <div>
+                    <p className="text-sm text-gray-900">{op.operationName}</p>
+                    <p className="text-xs text-gray-400">{op.quantity.toLocaleString("pt-BR")} pcs produzidas</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-sm font-bold ${reworkPct > 5 ? "text-red-500" : reworkPct > 2 ? "text-orange-500" : "text-green-600"}`}>
+                      {reworkPct.toFixed(1)}%
+                    </p>
+                    <p className="text-xs text-gray-400">retrabalho</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Ranking de costureiras */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
         <h2 className="text-sm font-semibold text-gray-700 mb-3">Ranking de costureiras</h2>
         {data.bySeamstress.length === 0 ? (
@@ -157,24 +232,8 @@ function DashboardContent({ data }: { data: DashboardData }) {
           </div>
         )}
       </div>
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-        <h2 className="text-sm font-semibold text-gray-700 mb-3">Por operacao</h2>
-        {data.byOperation.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-4">Sem dados no periodo.</p>
-        ) : (
-          <div className="space-y-2">
-            {data.byOperation.map((op) => (
-              <div key={op.operationId} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                <p className="text-sm text-gray-900">{op.operationName}</p>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-gray-900">{op.quantity.toLocaleString("pt-BR")} pcs</p>
-                  {op.reworkQuantity > 0 && <p className="text-xs text-orange-500">{op.reworkQuantity} retrabalho</p>}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+
+      {/* Ordens em andamento */}
       {data.openOrders.length > 0 && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
           <h2 className="text-sm font-semibold text-gray-700 mb-3">Ordens em andamento</h2>
@@ -199,6 +258,7 @@ function DashboardContent({ data }: { data: DashboardData }) {
           </div>
         </div>
       )}
+
     </div>
   );
 }
