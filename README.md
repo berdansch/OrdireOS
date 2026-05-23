@@ -75,9 +75,9 @@ Isolamento por `tenant_id` em todas as tabelas operacionais desde o schema. Nenh
 | M3 | AGENTS.md + specs.md + Progress Tracker + symlink CLAUDE.md | ✅ Concluído |
 | M4 | Schema Drizzle completo + migrations + seed + Neon | ✅ Concluído |
 | M5 | Autenticação JWT + roles + tenant isolation | ✅ Concluído |
-| M6 | Feature core: lançamento de produção (costureira) | 🔵 Em andamento |
-| M7 | Dashboard do proprietário | ⬜ A fazer |
-| M8 | Deploy (Vercel + Cloudflare Workers + Neon) | ⬜ A fazer |
+| M6 | Feature core: lançamento de produção (costureira) | ✅ Concluído |
+| M7 | Dashboard do proprietário | ✅ Concluído |
+| M8 | Deploy (Vercel + Cloudflare Workers + Neon) | 🔵 Em andamento |
 
 ---
 
