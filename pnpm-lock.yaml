@@ -58,6 +58,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@ordireos/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       next:
         specifier: '15'
         version: 15.5.18(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
