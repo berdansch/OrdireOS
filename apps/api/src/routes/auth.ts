@@ -1,9 +1,17 @@
+// apps/api/src/routes/auth.ts
 import { Hono } from "hono";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
+import { zValidator } from "@hono/zod-validator";
+import { z } from "zod";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { createDb, users } from "@ordireos/db";
-import { signAccessToken, signRefreshToken, verifyToken, type RefreshTokenPayload } from "../lib/jwt";
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyToken,
+  type RefreshTokenPayload,
+} from "../lib/jwt";
 import type { AppContext } from "../index";
 
 export const authRoutes = new Hono<AppContext>();
@@ -12,31 +20,34 @@ const REFRESH_COOKIE = "ordireos_refresh";
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: true,
-  sameSite: "Strict" as const,
+  sameSite: "None" as const, // None necessario para cross-origin (Vercel <-> Workers)
   maxAge: 60 * 60 * 24 * 7,
   path: "/",
 };
 
-authRoutes.post("/login", async (c) => {
-  const body = await c.req.json<{ email: string; password: string }>();
+// Schema de validacao do login
+const loginSchema = z.object({
+  email: z.string().email("Email invalido"),
+  password: z.string().min(1, "Senha obrigatoria"),
+});
 
-  if (!body.email || !body.password) {
-    return c.json({ error: "Email e senha sao obrigatorios" }, 400);
-  }
+// POST /auth/login
+authRoutes.post("/login", zValidator("json", loginSchema), async (c) => {
+  const { email, password } = c.req.valid("json");
 
   const db = createDb(c.env.DATABASE_URL);
 
   const [user] = await db
     .select()
     .from(users)
-    .where(eq(users.email, body.email.toLowerCase().trim()))
+    .where(eq(users.email, email.toLowerCase().trim()))
     .limit(1);
 
   if (!user || !user.active) {
     return c.json({ error: "Credenciais invalidas" }, 401);
   }
 
-  const passwordValid = await bcrypt.compare(body.password, user.passwordHash);
+  const passwordValid = await bcrypt.compare(password, user.passwordHash);
   if (!passwordValid) {
     return c.json({ error: "Credenciais invalidas" }, 401);
   }
@@ -55,10 +66,16 @@ authRoutes.post("/login", async (c) => {
 
   return c.json({
     access_token: accessToken,
-    user: { id: user.id, name: user.name, role: user.role, tenant_id: user.tenantId },
+    user: {
+      id: user.id,
+      name: user.name,
+      role: user.role,
+      tenant_id: user.tenantId,
+    },
   });
 });
 
+// POST /auth/refresh
 authRoutes.post("/refresh", async (c) => {
   const refreshToken = getCookie(c, REFRESH_COOKIE);
 
@@ -66,7 +83,10 @@ authRoutes.post("/refresh", async (c) => {
     return c.json({ error: "Refresh token ausente" }, 401);
   }
 
-  const payload = await verifyToken<RefreshTokenPayload>(refreshToken, c.env.JWT_REFRESH_SECRET);
+  const payload = await verifyToken<RefreshTokenPayload>(
+    refreshToken,
+    c.env.JWT_REFRESH_SECRET
+  );
 
   if (!payload) {
     return c.json({ error: "Refresh token invalido ou expirado" }, 401);
@@ -91,6 +111,7 @@ authRoutes.post("/refresh", async (c) => {
   return c.json({ access_token: accessToken });
 });
 
+// POST /auth/logout
 authRoutes.post("/logout", async (c) => {
   deleteCookie(c, REFRESH_COOKIE, { path: "/" });
   return c.json({ success: true });

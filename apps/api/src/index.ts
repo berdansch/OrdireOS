@@ -5,6 +5,7 @@ import { authRoutes } from "./routes/auth";
 import { operationsRoutes } from "./routes/operations";
 import { productionOrdersRoutes } from "./routes/production-orders";
 import { productionLogsRoutes } from "./routes/production-logs";
+import { dashboardRoutes } from "./routes/dashboard";
 
 export type Env = {
   DATABASE_URL: string;
@@ -28,8 +29,16 @@ const app = new Hono<AppContext>();
 
 app.use("*", logger());
 
+// CORS dinamico — aceita localhost em dev e Vercel em producao
 app.use("*", cors({
-  origin: ["http://localhost:3000"],
+  origin: (origin) => {
+    const allowed = [
+      "http://localhost:3000",
+      "https://ordire-os-api.vercel.app",
+    ];
+    if (!origin || allowed.includes(origin)) return origin ?? "*";
+    return null;
+  },
   allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   allowHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -43,13 +52,12 @@ app.route("/auth", authRoutes);
 app.route("/operations", operationsRoutes);
 app.route("/production-orders", productionOrdersRoutes);
 app.route("/production-logs", productionLogsRoutes);
-import { dashboardRoutes } from "./routes/dashboard";
 app.route("/dashboard", dashboardRoutes);
 
 app.notFound((c) => c.json({ error: "Rota nao encontrada" }, 404));
 
 app.onError((err, c) => {
-  console.error("Erro:", err);
+  console.error("[ERROR]", err.message, err.stack);
   return c.json({ error: "Erro interno do servidor" }, 500);
 });
 

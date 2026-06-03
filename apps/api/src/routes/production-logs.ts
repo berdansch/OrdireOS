@@ -1,10 +1,24 @@
+// apps/api/src/routes/production-logs.ts
 import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
+import { z } from "zod";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { createDb, productionLogs, operations, productionOrders } from "@ordireos/db";
 import { authMiddleware } from "../middleware/auth";
 import type { AppContext } from "../index";
 
 export const productionLogsRoutes = new Hono<AppContext>();
+
+// Schema de validacao do lancamento
+const createLogSchema = z.object({
+  productionOrderId: z.string().uuid("ID de ordem invalido"),
+  operationId: z.string().uuid("ID de operacao invalido"),
+  quantity: z.number().int().positive("Quantidade deve ser maior que zero"),
+  reworkQuantity: z.number().int().min(0).optional().default(0),
+}).refine(
+  (data) => (data.reworkQuantity ?? 0) <= data.quantity,
+  { message: "Retrabalho nao pode ser maior que a quantidade produzida" }
+);
 
 function detectShift(): "morning" | "afternoon" | "night" {
   const hour = new Date().getHours();
@@ -13,65 +27,59 @@ function detectShift(): "morning" | "afternoon" | "night" {
   return "night";
 }
 
-productionLogsRoutes.post("/", authMiddleware, async (c) => {
-  const { tenant_id, user_id } = c.get("auth");
-  const body = await c.req.json<{
-    productionOrderId: string;
-    operationId: string;
-    quantity: number;
-    reworkQuantity?: number;
-  }>();
+// POST /production-logs
+productionLogsRoutes.post(
+  "/",
+  authMiddleware,
+  zValidator("json", createLogSchema),
+  async (c) => {
+    const { tenant_id, user_id } = c.get("auth");
+    const body = c.req.valid("json");
 
-  if (!body.productionOrderId || !body.operationId) {
-    return c.json({ error: "Ordem e operacao sao obrigatorias" }, 400);
+    const db = createDb(c.env.DATABASE_URL);
+
+    const [order] = await db
+      .select()
+      .from(productionOrders)
+      .where(and(
+        eq(productionOrders.id, body.productionOrderId),
+        eq(productionOrders.tenantId, tenant_id)
+      ))
+      .limit(1);
+
+    if (!order) return c.json({ error: "Ordem nao encontrada" }, 404);
+    if (order.status === "closed") return c.json({ error: "Esta ordem ja foi encerrada" }, 400);
+
+    const [operation] = await db
+      .select()
+      .from(operations)
+      .where(and(
+        eq(operations.id, body.operationId),
+        eq(operations.tenantId, tenant_id),
+        eq(operations.active, true)
+      ))
+      .limit(1);
+
+    if (!operation) return c.json({ error: "Operacao nao encontrada" }, 404);
+
+    const [log] = await db
+      .insert(productionLogs)
+      .values({
+        tenantId: tenant_id,
+        userId: user_id,
+        productionOrderId: body.productionOrderId,
+        operationId: body.operationId,
+        quantity: body.quantity,
+        reworkQuantity: body.reworkQuantity ?? 0,
+        shift: detectShift(),
+      })
+      .returning();
+
+    return c.json(log, 201);
   }
+);
 
-  if (!body.quantity || body.quantity <= 0) {
-    return c.json({ error: "Quantidade deve ser maior que zero" }, 400);
-  }
-
-  const db = createDb(c.env.DATABASE_URL);
-
-  const [order] = await db
-    .select()
-    .from(productionOrders)
-    .where(and(
-      eq(productionOrders.id, body.productionOrderId),
-      eq(productionOrders.tenantId, tenant_id)
-    ))
-    .limit(1);
-
-  if (!order) return c.json({ error: "Ordem nao encontrada" }, 404);
-  if (order.status === "closed") return c.json({ error: "Esta ordem ja foi encerrada" }, 400);
-
-  const [operation] = await db
-    .select()
-    .from(operations)
-    .where(and(
-      eq(operations.id, body.operationId),
-      eq(operations.tenantId, tenant_id),
-      eq(operations.active, true)
-    ))
-    .limit(1);
-
-  if (!operation) return c.json({ error: "Operacao nao encontrada" }, 404);
-
-  const [log] = await db
-    .insert(productionLogs)
-    .values({
-      tenantId: tenant_id,
-      userId: user_id,
-      productionOrderId: body.productionOrderId,
-      operationId: body.operationId,
-      quantity: body.quantity,
-      reworkQuantity: body.reworkQuantity ?? 0,
-      shift: detectShift(),
-    })
-    .returning();
-
-  return c.json(log, 201);
-});
-
+// GET /production-logs/my
 productionLogsRoutes.get("/my", authMiddleware, async (c) => {
   const { tenant_id, user_id } = c.get("auth");
   const db = createDb(c.env.DATABASE_URL);
