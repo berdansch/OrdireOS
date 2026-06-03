@@ -1,65 +1,12 @@
-import { Hono } from "hono";
-import { cors } from "hono/cors";
-import { logger } from "hono/logger";
-import { authRoutes } from "./routes/auth";
-import { operationsRoutes } from "./routes/operations";
-import { productionOrdersRoutes } from "./routes/production-orders";
-import { productionLogsRoutes } from "./routes/production-logs";
-import { dashboardRoutes } from "./routes/dashboard";
+// packages/db/src/index.ts
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import * as schema from "./schema";
 
-export type Env = {
-  DATABASE_URL: string;
-  JWT_SECRET: string;
-  JWT_REFRESH_SECRET: string;
-  ENVIRONMENT: string;
-};
+export function createDb(databaseUrl: string) {
+  const sql = neon(databaseUrl);
+  return drizzle(sql, { schema });
+}
 
-export type AppContext = {
-  Bindings: Env;
-  Variables: {
-    auth: {
-      user_id: string;
-      tenant_id: string;
-      role: "owner" | "supervisor" | "seamstress";
-    };
-  };
-};
-
-const app = new Hono<AppContext>();
-
-app.use("*", logger());
-
-// CORS dinamico — aceita localhost em dev e Vercel em producao
-app.use("*", cors({
-  origin: (origin) => {
-    const allowed = [
-      "http://localhost:3000",
-      "https://ordire-os-api.vercel.app",
-    ];
-    if (!origin || allowed.includes(origin)) return origin ?? "*";
-    return null;
-  },
-  allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-  allowHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-}));
-
-app.get("/health", (c) => {
-  return c.json({ status: "ok", env: c.env.ENVIRONMENT });
-});
-
-app.route("/auth", authRoutes);
-app.route("/operations", operationsRoutes);
-app.route("/production-orders", productionOrdersRoutes);
-app.route("/production-logs", productionLogsRoutes);
-app.route("/dashboard", dashboardRoutes);
-
-app.notFound((c) => c.json({ error: "Rota nao encontrada" }, 404));
-
-app.onError((err, c) => {
-  console.error("[ERROR]", err.message, err.stack);
-  return c.json({ error: "Erro interno do servidor" }, 500);
-});
-
-export default app;
-export * from "./types";
+export * from "./schema";
+export * from "./types"; // exporta todos os tipos inferidos
