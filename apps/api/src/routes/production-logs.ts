@@ -1,10 +1,48 @@
 import { Hono } from "hono";
-import { createDb, productionLogs } from "@ordireos/db";
+import { eq, and, gte } from "drizzle-orm";
+import { createDb, productionLogs, operations, productionOrders } from "@ordireos/db";
 import type { AppContext } from "../index";
 import { authMiddleware } from "../middleware/auth";
 
 export const productionLogsRoutes = new Hono<AppContext>();
 
+// GET /production-logs/my — histórico do dia da costureira logada
+productionLogsRoutes.get("/my", authMiddleware, async (c) => {
+  const { tenant_id, user_id } = c.get("auth");
+  const db = createDb(c.env.DATABASE_URL);
+
+  // Início do dia atual em UTC
+  const startOfDay = new Date();
+  startOfDay.setUTCHours(0, 0, 0, 0);
+
+  const rows = await db
+    .select({
+      id: productionLogs.id,
+      quantity: productionLogs.quantity,
+      reworkQuantity: productionLogs.reworkQuantity,
+      shift: productionLogs.shift,
+      loggedAt: productionLogs.loggedAt,
+      operationName: operations.name,
+      orderReference: productionOrders.reference,
+    })
+    .from(productionLogs)
+    .innerJoin(operations, eq(productionLogs.operationId, operations.id))
+    .innerJoin(productionOrders, eq(productionLogs.productionOrderId, productionOrders.id))
+    .where(
+      and(
+        eq(productionLogs.tenantId, tenant_id),
+        eq(productionLogs.userId, user_id),
+        gte(productionLogs.loggedAt, startOfDay)
+      )
+    )
+    .orderBy(productionLogs.loggedAt);
+
+  const total = rows.reduce((sum, row) => sum + row.quantity, 0);
+
+  return c.json({ logs: rows, total });
+});
+
+// POST /production-logs — registrar produção
 productionLogsRoutes.post("/", authMiddleware, async (c) => {
   const { tenant_id, user_id } = c.get("auth");
   const body = await c.req.json<{
