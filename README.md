@@ -9,7 +9,7 @@
 <br/>
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=flat-square&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![Hono](https://img.shields.io/badge/Hono-Cloudflare_Workers-E36002?style=flat-square&logo=cloudflare&logoColor=white)](https://hono.dev/)
 [![Drizzle](https://img.shields.io/badge/Drizzle_ORM-PostgreSQL-C5F74F?style=flat-square&logo=postgresql&logoColor=black)](https://orm.drizzle.team/)
 [![Turborepo](https://img.shields.io/badge/Turborepo-Monorepo-EF4444?style=flat-square&logo=turborepo&logoColor=white)](https://turbo.build/)
@@ -49,7 +49,7 @@ O [Toast](https://pos.toasttab.com/) é hoje uma plataforma de ~$1B de receita a
 
 ```
 Monorepo:    Turborepo + PNPM workspace
-Frontend:    apps/web   → Next.js 16 + Tailwind 4 + Turbopack
+Frontend:    apps/web   → Next.js 15 + Tailwind 4 + Turbopack
 Backend:     apps/api   → Hono (Cloudflare Workers)
 Packages:    packages/shared → código compartilhado
              packages/db     → Drizzle ORM + schema + migrations
@@ -70,7 +70,7 @@ Isolamento por `tenant_id` em todas as tabelas operacionais desde o schema. Nenh
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Fundação do monorepo (Turborepo + PNPM + TS Strict + ESLint + Prettier) | ✅ Concluído |
-| M1 | Apps inicializados (Next.js 16 + Hono rodando) | ✅ Concluído |
+| M1 | Apps inicializados (Next.js 15 + Hono rodando) | ✅ Concluído |
 | M2 | Packages placeholder (shared + db) | ✅ Concluído |
 | M3 | AGENTS.md + specs.md + Progress Tracker + symlink CLAUDE.md | ✅ Concluído |
 | M4 | Schema Drizzle completo + migrations + seed + Neon | ✅ Concluído |
@@ -78,12 +78,13 @@ Isolamento por `tenant_id` em todas as tabelas operacionais desde o schema. Nenh
 | M6 | Feature core: lançamento de produção (costureira) | ✅ Concluído |
 | M7 | Dashboard do proprietário | ✅ Concluído |
 | M8 | Deploy (Vercel + Cloudflare Workers + Neon) | 🔵 Em andamento |
+| Sprint 2 | Gestão de usuários + ordens de produção + onboarding de tenant | ✅ Concluído |
 
 ---
 
 ## Desenvolvimento com IA
 
-Este projeto é desenvolvido em parceria com **Claude Code** como agente de desenvolvimento. A estrutura do repositório foi pensada para maximizar a efetividade desse fluxo:
+Este projeto é desenvolvido em parceria com **Claude** (Anthropic) como agente de desenvolvimento. A estrutura do repositório foi pensada para maximizar a efetividade desse fluxo:
 
 - **`AGENTS.md`** define as regras que o agente deve seguir antes de qualquer tarefa
 - **`CLAUDE.md`** é um symlink para `AGENTS.md`
@@ -115,7 +116,7 @@ pnpm dev
 
 ## Licença
 
-Proprietário. Código público até M5 para fins de portfólio.
+Proprietário. Código público para fins de portfólio.
 
 ---
 
