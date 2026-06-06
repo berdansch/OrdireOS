@@ -2,10 +2,12 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { authRoutes } from "./routes/auth";
+import { usersRoutes } from "./routes/users";
 import { operationsRoutes } from "./routes/operations";
 import { productionOrdersRoutes } from "./routes/production-orders";
 import { productionLogsRoutes } from "./routes/production-logs";
 import { dashboardRoutes } from "./routes/dashboard";
+import { onboardingRoutes } from "./routes/onboarding";
 
 export type Env = {
   DATABASE_URL: string;
@@ -29,7 +31,6 @@ const app = new Hono<AppContext>();
 
 app.use("*", logger());
 
-// CORS dinamico — aceita localhost em dev e Vercel em producao
 app.use("*", cors({
   origin: (origin) => {
     const allowed = [
@@ -49,10 +50,12 @@ app.get("/health", (c) => {
 });
 
 app.route("/auth", authRoutes);
+app.route("/users", usersRoutes);
 app.route("/operations", operationsRoutes);
 app.route("/production-orders", productionOrdersRoutes);
 app.route("/production-logs", productionLogsRoutes);
 app.route("/dashboard", dashboardRoutes);
+app.route("/onboarding", onboardingRoutes);
 
 app.notFound((c) => c.json({ error: "Rota nao encontrada" }, 404));
 

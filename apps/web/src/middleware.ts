@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_ROUTES = ["/login"];
+const PUBLIC_ROUTES = ["/login", "/onboarding"];
 const REFRESH_COOKIE = "ordireos_refresh";
 
 export function middleware(request: NextRequest) {
@@ -23,5 +23,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/).*)",],
 };
