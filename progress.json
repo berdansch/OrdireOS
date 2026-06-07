@@ -1,6 +1,6 @@
 {
   "project": "OrdireOS",
-  "last_updated": "2026-05-23",
+  "last_updated": "2026-06-07",
   "active_milestone": "M8",
   "milestones": [
     {
@@ -77,6 +77,29 @@
         { "id": "M8.3", "title": "Variaveis de ambiente em producao", "done": false },
         { "id": "M8.4", "title": "Testar fluxo completo em producao", "done": false }
       ]
+    }
+  ],
+  "sprints": [
+    {
+      "id": "Sprint1",
+      "title": "CORS dinamico + tipagem end-to-end",
+      "status": "done",
+      "completed_at": "2026-05-23",
+      "confirmed_by": "Bernardo"
+    },
+    {
+      "id": "Sprint2",
+      "title": "Gestao de usuarios + ordens de producao + onboarding de tenant + Tailwind corrigido",
+      "status": "done",
+      "completed_at": "2026-06-06",
+      "confirmed_by": "Bernardo"
+    },
+    {
+      "id": "Sprint3",
+      "title": "Race condition nos layouts + Neon HTTP timestamp fix + price_per_piece migration + GET /production-logs/my",
+      "status": "done",
+      "completed_at": "2026-06-07",
+      "confirmed_by": "Bernardo"
     }
   ]
 }

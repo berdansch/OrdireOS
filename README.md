@@ -78,7 +78,14 @@ Isolamento por `tenant_id` em todas as tabelas operacionais desde o schema. Nenh
 | M6 | Feature core: lançamento de produção (costureira) | ✅ Concluído |
 | M7 | Dashboard do proprietário | ✅ Concluído |
 | M8 | Deploy (Vercel + Cloudflare Workers + Neon) | 🔵 Em andamento |
-| Sprint 2 | Gestão de usuários + ordens de produção + onboarding de tenant | ✅ Concluído |
+
+## Sprints
+
+| # | Sprint | Status |
+|---|---|---|
+| Sprint 1 | CORS dinâmico + tipagem end-to-end | ✅ Concluído |
+| Sprint 2 | Gestão de usuários + ordens de produção + onboarding de tenant + Tailwind corrigido | ✅ Concluído |
+| Sprint 3 | Race condition nos layouts + Neon HTTP timestamp fix + price_per_piece migration | ✅ Concluído |
 
 ---
 
