@@ -1,23 +1,33 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { tokenStore } from "@/lib/auth/token-store";
 import { refreshAccessToken } from "@/lib/auth/refresh";
 
-export default function OwnerLayout({ children }: { children: React.ReactNode }) {
+export default function CostureiraLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     async function init() {
       if (!tokenStore.isAuthenticated()) {
         const token = await refreshAccessToken();
-        if (!token) { router.replace("/login"); return; }
+        if (!token) {
+          router.replace("/login");
+          return;
+        }
       }
       const user = tokenStore.getUser();
-      if (user && user.role !== "owner" && user.role !== "supervisor") {
+      if (user && user.role !== "seamstress") {
         router.replace("/login");
+        return;
       }
+      setReady(true);
     }
     init();
   }, [router]);
@@ -28,8 +38,10 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
         <div>
-          <p className="text-xs text-gray-400">OrdireOS</p>
-          <p className="text-sm font-semibold text-gray-900">{user?.name ?? "Carregando..."}</p>
+          <p className="text-xs text-gray-400">Bem-vinda,</p>
+          <p className="text-sm font-semibold text-gray-900">
+            {user?.name ?? "Carregando..."}
+          </p>
         </div>
         <button
           onClick={async () => {
@@ -45,7 +57,13 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
           Sair
         </button>
       </header>
-      <main className="px-4 py-6">{children}</main>
+      <main className="px-4 py-6">
+        {ready ? children : (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
+          </div>
+        )}
+      </main>
     </div>
   );
 }

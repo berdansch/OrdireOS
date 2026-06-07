@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { createDb, productionLogs, operations, productionOrders, users } from "@ordireos/db";
 import { authMiddleware } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
@@ -16,8 +16,10 @@ dashboardRoutes.get("/", authMiddleware, requireRole(["owner", "supervisor"]), a
     return c.json({ error: "Parametros start e end sao obrigatorios" }, 400);
   }
 
-  const start = new Date(startStr);
-  const end = new Date(endStr);
+  // Neon HTTP driver nao aceita Date objects como bind params — usar sql.raw com ISO strings validadas
+  const safeStart = new Date(startStr).toISOString();
+  const safeEnd = new Date(endStr).toISOString();
+
   const db = createDb(c.env.DATABASE_URL);
 
   const logs = await db
@@ -43,8 +45,8 @@ dashboardRoutes.get("/", authMiddleware, requireRole(["owner", "supervisor"]), a
     .innerJoin(productionOrders, eq(productionLogs.productionOrderId, productionOrders.id))
     .where(and(
       eq(productionLogs.tenantId, tenant_id),
-      gte(productionLogs.loggedAt, start),
-      lte(productionLogs.loggedAt, end)
+      sql`${productionLogs.loggedAt} >= ${sql.raw("'" + safeStart + "'")}::timestamptz`,
+      sql`${productionLogs.loggedAt} <= ${sql.raw("'" + safeEnd + "'")}::timestamptz`,
     ));
 
   const totalPieces = logs.reduce((acc, l) => acc + l.quantity, 0);
@@ -112,7 +114,7 @@ dashboardRoutes.get("/", authMiddleware, requireRole(["owner", "supervisor"]), a
     .from(productionOrders)
     .where(and(
       eq(productionOrders.tenantId, tenant_id),
-      eq(productionOrders.status, "in_progress")
+      sql`${productionOrders.status} = 'in_progress'`
     ));
 
   const openOrders = await Promise.all(

@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { createDb, operations } from "@ordireos/db";
 import { authMiddleware } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
@@ -16,7 +16,7 @@ operationsRoutes.get("/", authMiddleware, async (c) => {
     .from(operations)
     .where(and(
       eq(operations.tenantId, tenant_id),
-      eq(operations.active, true)
+      sql`${operations.active} = true`
     ))
     .orderBy(operations.name);
 
