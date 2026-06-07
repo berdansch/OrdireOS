@@ -92,6 +92,12 @@ function LoginForm() {
         >
           {loading ? "Entrando..." : "Entrar"}
         </button>
+        <p className="text-xs text-center text-gray-400 mt-2">
+          Não tem conta?{" "}
+          <a href="/onboarding" className="text-gray-900 font-medium underline">
+            Cadastrar facção
+          </a>
+        </p>
       </div>
     </main>
   );

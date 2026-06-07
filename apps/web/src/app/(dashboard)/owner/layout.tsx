@@ -277,6 +277,18 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
           >
             Usuários
           </button>
+          <a
+            href="/ordens"
+            className="text-xs text-gray-600 font-medium px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50"
+          >
+            Ordens
+          </a>
+          <a
+            href="/configuracoes/operacoes"
+            className="text-xs text-gray-600 font-medium px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50"
+          >
+            Operações
+          </a>
           <button
             onClick={async () => {
               await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const PUBLIC_ROUTES = ["/login", "/onboarding"];
-const PROTECTED_ROUTES = ["/owner", "/costureira", "/supervisor"];
+const PROTECTED_ROUTES = ["/owner", "/costureira", "/supervisor", "/ordens", "/configuracoes", "/usuarios"];
 
 // O cookie de refresh fica no dominio do Worker (cross-domain).
 // Para proteger rotas no middleware do Vercel, usamos um cookie de sessao
