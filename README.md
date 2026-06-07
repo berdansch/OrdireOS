@@ -14,6 +14,8 @@
 [![Drizzle](https://img.shields.io/badge/Drizzle_ORM-PostgreSQL-C5F74F?style=flat-square&logo=postgresql&logoColor=black)](https://orm.drizzle.team/)
 [![Turborepo](https://img.shields.io/badge/Turborepo-Monorepo-EF4444?style=flat-square&logo=turborepo&logoColor=white)](https://turbo.build/)
 
+**🟢 Em produção:** [ordire-os-api.vercel.app](https://ordire-os-api.vercel.app)
+
 </div>
 
 ---
@@ -77,7 +79,7 @@ Isolamento por `tenant_id` em todas as tabelas operacionais desde o schema. Nenh
 | M5 | Autenticação JWT + roles + tenant isolation | ✅ Concluído |
 | M6 | Feature core: lançamento de produção (costureira) | ✅ Concluído |
 | M7 | Dashboard do proprietário | ✅ Concluído |
-| M8 | Deploy (Vercel + Cloudflare Workers + Neon) | 🔵 Em andamento |
+| M8 | Deploy (Vercel + Cloudflare Workers + Neon) | ✅ Concluído |
 
 ## Sprints
 
@@ -86,6 +88,7 @@ Isolamento por `tenant_id` em todas as tabelas operacionais desde o schema. Nenh
 | Sprint 1 | CORS dinâmico + tipagem end-to-end | ✅ Concluído |
 | Sprint 2 | Gestão de usuários + ordens de produção + onboarding de tenant + Tailwind corrigido | ✅ Concluído |
 | Sprint 3 | Race condition nos layouts + Neon HTTP timestamp fix + price_per_piece migration | ✅ Concluído |
+| Sprint 4 | Auth client-side em produção: sessionStorage + middleware simplificado | ✅ Concluído |
 
 ---
 
@@ -109,6 +112,10 @@ cd OrdireOS
 
 # Instalar dependências
 pnpm install
+
+# Configurar variáveis de ambiente
+cp apps/api/.dev.vars.example apps/api/.dev.vars
+# Preencher DATABASE_URL, JWT_SECRET, JWT_REFRESH_SECRET
 
 # Banco de dados
 pnpm db:generate
