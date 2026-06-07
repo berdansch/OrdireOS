@@ -3,7 +3,7 @@ name: Sync commit to Notion
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   notion-sync:
@@ -12,7 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # precisa do commit anterior para diff
+          fetch-depth: 2
 
       - name: Sync to Notion
         env:
