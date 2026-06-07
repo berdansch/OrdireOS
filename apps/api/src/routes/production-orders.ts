@@ -7,7 +7,7 @@ import type { AppContext } from "../index";
 
 export const productionOrdersRoutes = new Hono<AppContext>();
 
-productionOrdersRoutes.get("/", authMiddleware, requireRole(["owner", "supervisor"]), async (c) => {
+productionOrdersRoutes.get("/", authMiddleware, requireRole(["owner", "supervisor", "seamstress"]), async (c) => {
   const { tenant_id } = c.get("auth");
   const db = createDb(c.env.DATABASE_URL);
   const result = await db
