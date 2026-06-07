@@ -1,0 +1,4 @@
+DATABASE_URL=postgresql://usuario:senha@host/neondb?sslmode=require
+JWT_SECRET=seu_jwt_secret_aqui
+JWT_REFRESH_SECRET=seu_jwt_refresh_secret_aqui
+ENVIRONMENT=development

@@ -16,6 +16,7 @@ const store: AuthStore = {
 };
 
 const SESSION_KEY = "ordireos_auth";
+const SESSION_COOKIE = "ordireos_session";
 
 function loadFromSession(): void {
   if (store.accessToken !== null) return;
@@ -36,6 +37,15 @@ function saveToSession(): void {
   } catch {
     // sessionStorage indisponivel
   }
+}
+
+function setSessionCookie(): void {
+  // Cookie leve no dominio do Vercel — permite middleware proteger rotas
+  document.cookie = `${SESSION_COOKIE}=1; path=/; SameSite=Lax; Secure; Max-Age=604800`;
+}
+
+function clearSessionCookie(): void {
+  document.cookie = `${SESSION_COOKIE}=; path=/; Max-Age=0`;
 }
 
 function clearSession(): void {
@@ -61,12 +71,14 @@ export const tokenStore = {
     store.accessToken = token;
     store.user = user;
     saveToSession();
+    setSessionCookie();
   },
 
   clearAuth: () => {
     store.accessToken = null;
     store.user = null;
     clearSession();
+    clearSessionCookie();
   },
 
   isAuthenticated: () => {
