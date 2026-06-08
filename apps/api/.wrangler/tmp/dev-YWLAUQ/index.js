@@ -38,7 +38,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// .wrangler/tmp/bundle-YCdLRv/checked-fetch.js
+// .wrangler/tmp/bundle-bf8B09/checked-fetch.js
 function checkURL(request, init) {
   const url = request instanceof URL ? request : new URL(
     (typeof request === "string" ? new Request(request, init) : request).url
@@ -56,7 +56,7 @@ function checkURL(request, init) {
 }
 var urls;
 var init_checked_fetch = __esm({
-  ".wrangler/tmp/bundle-YCdLRv/checked-fetch.js"() {
+  ".wrangler/tmp/bundle-bf8B09/checked-fetch.js"() {
     "use strict";
     urls = /* @__PURE__ */ new Set();
     __name(checkURL, "checkURL");
@@ -1914,11 +1914,11 @@ var require_bcrypt = __commonJS({
   }
 });
 
-// .wrangler/tmp/bundle-YCdLRv/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-bf8B09/middleware-loader.entry.ts
 init_checked_fetch();
 init_modules_watch_stub();
 
-// .wrangler/tmp/bundle-YCdLRv/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-bf8B09/middleware-insertion-facade.js
 init_checked_fetch();
 init_modules_watch_stub();
 
@@ -19381,7 +19381,7 @@ operationsRoutes.get("/", authMiddleware, async (c) => {
   const db = createDb(c.env.DATABASE_URL);
   const result = await db.select().from(operations).where(and(
     eq(operations.tenantId, tenant_id),
-    eq(operations.active, true)
+    sql`${operations.active} = true`
   )).orderBy(operations.name);
   return c.json(result);
 });
@@ -19419,7 +19419,7 @@ operationsRoutes.patch("/:id", authMiddleware, requireRole(["owner"]), async (c)
 init_checked_fetch();
 init_modules_watch_stub();
 var productionOrdersRoutes = new Hono2();
-productionOrdersRoutes.get("/", authMiddleware, requireRole(["owner", "supervisor"]), async (c) => {
+productionOrdersRoutes.get("/", authMiddleware, requireRole(["owner", "supervisor", "seamstress"]), async (c) => {
   const { tenant_id } = c.get("auth");
   const db = createDb(c.env.DATABASE_URL);
   const result = await db.select().from(productionOrders).where(eq(productionOrders.tenantId, tenant_id)).orderBy(desc(productionOrders.createdAt));
@@ -19501,8 +19501,8 @@ dashboardRoutes.get("/", authMiddleware, requireRole(["owner", "supervisor"]), a
   if (!startStr || !endStr) {
     return c.json({ error: "Parametros start e end sao obrigatorios" }, 400);
   }
-  const start = new Date(startStr);
-  const end = new Date(endStr);
+  const safeStart = new Date(startStr).toISOString();
+  const safeEnd = new Date(endStr).toISOString();
   const db = createDb(c.env.DATABASE_URL);
   const logs = await db.select({
     id: productionLogs.id,
@@ -19521,8 +19521,8 @@ dashboardRoutes.get("/", authMiddleware, requireRole(["owner", "supervisor"]), a
     totalPieces: productionOrders.totalPieces
   }).from(productionLogs).innerJoin(operations, eq(productionLogs.operationId, operations.id)).innerJoin(users, eq(productionLogs.userId, users.id)).innerJoin(productionOrders, eq(productionLogs.productionOrderId, productionOrders.id)).where(and(
     eq(productionLogs.tenantId, tenant_id),
-    gte(productionLogs.loggedAt, start),
-    lte(productionLogs.loggedAt, end)
+    sql`${productionLogs.loggedAt} >= ${sql.raw("'" + safeStart + "'")}::timestamptz`,
+    sql`${productionLogs.loggedAt} <= ${sql.raw("'" + safeEnd + "'")}::timestamptz`
   ));
   const totalPieces = logs.reduce((acc, l) => acc + l.quantity, 0);
   const totalRework = logs.reduce((acc, l) => acc + l.reworkQuantity, 0);
@@ -19566,7 +19566,7 @@ dashboardRoutes.get("/", authMiddleware, requireRole(["owner", "supervisor"]), a
   const bySeamstress = Array.from(seamstressMap.values()).sort((a2, b2) => b2.quantity - a2.quantity);
   const openOrdersList = await db.select().from(productionOrders).where(and(
     eq(productionOrders.tenantId, tenant_id),
-    eq(productionOrders.status, "in_progress")
+    sql`${productionOrders.status} = 'in_progress'`
   ));
   const openOrders = await Promise.all(
     openOrdersList.map(async (order) => {
@@ -19597,31 +19597,38 @@ var onboardingRoutes = new Hono2();
 var SLUG_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 onboardingRoutes.post("/register", async (c) => {
   const body = await c.req.json();
-  if (!body.tenantName || typeof body.tenantName !== "string" || body.tenantName.trim() === "") return c.json({ error: "Nome da faccao e obrigatorio" }, 400);
-  if (!body.tenantSlug || typeof body.tenantSlug !== "string" || !SLUG_REGEX.test(body.tenantSlug)) return c.json({ error: "Slug invalido. Use apenas letras minusculas, numeros e hifens (ex: conf-silva)" }, 400);
-  if (!body.ownerName || typeof body.ownerName !== "string" || body.ownerName.trim() === "") return c.json({ error: "Nome do responsavel e obrigatorio" }, 400);
-  if (!body.email || typeof body.email !== "string" || !body.email.includes("@")) return c.json({ error: "Email invalido" }, 400);
-  if (!body.password || typeof body.password !== "string" || body.password.length < 6) return c.json({ error: "Senha deve ter pelo menos 6 caracteres" }, 400);
+  if (!body.tenantName || typeof body.tenantName !== "string" || body.tenantName.trim() === "")
+    return c.json({ error: "Nome da faccao e obrigatorio" }, 400);
+  if (!body.tenantSlug || typeof body.tenantSlug !== "string" || !SLUG_REGEX.test(body.tenantSlug))
+    return c.json({ error: "Slug invalido. Use apenas letras minusculas, numeros e hifens (ex: conf-silva)" }, 400);
+  if (!body.ownerName || typeof body.ownerName !== "string" || body.ownerName.trim() === "")
+    return c.json({ error: "Nome do responsavel e obrigatorio" }, 400);
+  if (!body.email || typeof body.email !== "string" || !body.email.includes("@"))
+    return c.json({ error: "Email invalido" }, 400);
+  if (!body.password || typeof body.password !== "string" || body.password.length < 6)
+    return c.json({ error: "Senha deve ter pelo menos 6 caracteres" }, 400);
   const db = createDb(c.env.DATABASE_URL);
   const [existingEmail] = await db.select({ id: users.id }).from(users).where(eq(users.email, body.email.toLowerCase().trim())).limit(1);
   if (existingEmail) return c.json({ error: "Este email ja esta em uso" }, 409);
+  const [existingSlug] = await db.select({ id: tenants.id }).from(tenants).where(eq(tenants.slug, body.tenantSlug)).limit(1);
+  if (existingSlug) return c.json({ error: "Este identificador ja esta em uso. Escolha outro." }, 409);
+  const [newTenant] = await db.insert(tenants).values({ name: body.tenantName.trim(), slug: body.tenantSlug }).returning({ id: tenants.id });
+  if (!newTenant) return c.json({ error: "Erro ao criar faccao. Tente novamente." }, 500);
   try {
-    await db.transaction(async (tx) => {
-      const [newTenant] = await tx.insert(tenants).values({ name: body.tenantName.trim(), slug: body.tenantSlug }).returning();
-      const passwordHash = await import_bcryptjs3.default.hash(body.password, 10);
-      await tx.insert(users).values({
-        tenantId: newTenant.id,
-        name: body.ownerName.trim(),
-        email: body.email.toLowerCase().trim(),
-        passwordHash,
-        role: "owner"
-      });
+    const passwordHash = await import_bcryptjs3.default.hash(body.password, 10);
+    await db.insert(users).values({
+      tenantId: newTenant.id,
+      name: body.ownerName.trim(),
+      email: body.email.toLowerCase().trim(),
+      passwordHash,
+      role: "owner"
     });
-    return c.json({ message: "Faccao registrada com sucesso!" }, 201);
   } catch (err) {
-    console.error(err);
-    return c.json({ error: "Slug ja esta em uso. Escolha outro." }, 409);
+    await db.delete(tenants).where(eq(tenants.id, newTenant.id));
+    console.error("Erro ao criar usuario, tenant removido:", err);
+    return c.json({ error: "Erro ao criar conta. Tente novamente." }, 500);
   }
+  return c.json({ message: "Faccao registrada com sucesso!" }, 201);
 });
 
 // src/index.ts
@@ -19702,7 +19709,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-YCdLRv/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-bf8B09/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -19736,7 +19743,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-YCdLRv/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-bf8B09/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

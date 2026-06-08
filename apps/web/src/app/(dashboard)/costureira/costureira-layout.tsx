@@ -12,6 +12,7 @@ export default function CostureiraLayout({
 }) {
   const router = useRouter();
   const [ready, setReady] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -27,6 +28,7 @@ export default function CostureiraLayout({
         router.replace("/login");
         return;
       }
+      setUserName(tokenStore.getUser()?.name ?? null);
       setReady(true);
     }
     init();
@@ -40,7 +42,7 @@ export default function CostureiraLayout({
         <div>
           <p className="text-xs text-gray-400">Bem-vinda,</p>
           <p className="text-sm font-semibold text-gray-900">
-            {user?.name ?? "Carregando..."}
+            {userName ?? "..."}
           </p>
         </div>
         <button

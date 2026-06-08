@@ -63,7 +63,7 @@ Deploy:      Vercel (web) · Cloudflare Workers (api) · Neon (db)
 
 ## Arquitetura multi-tenant
 
-Isolamento por `tenant_id` em todas as tabelas operacionais desde o schema. Nenhuma query executa sem filtro de tenant ativo — regra inviolável.
+Isolamento por `tenant_id` em todas as tabelas operacionais desde o schema. Nenhuma query executa sem filtro de tenant ativo — regra inviolável. Validado com múltiplos tenants em produção.
 
 ---
 
@@ -88,7 +88,16 @@ Isolamento por `tenant_id` em todas as tabelas operacionais desde o schema. Nenh
 | Sprint 1 | CORS dinâmico + tipagem end-to-end | ✅ Concluído |
 | Sprint 2 | Gestão de usuários + ordens de produção + onboarding de tenant + Tailwind corrigido | ✅ Concluído |
 | Sprint 3 | Race condition nos layouts + Neon HTTP timestamp fix + price_per_piece migration | ✅ Concluído |
-| Sprint 4 | Auth client-side em produção: sessionStorage + middleware simplificado | ✅ Concluído |
+| Sprint 4 | Auth client-side em produção: sessionStorage + middleware com cookie de sessão leve | ✅ Concluído |
+| Sprint 5 | Onboarding em 3 etapas + gestão de usuários UI + nav header owner + fix seamstress 403 | ✅ Concluído |
+
+---
+
+## Fluxo do produto
+
+**Owner:** cadastra a facção via `/onboarding` → cria operações e OPs → acompanha dashboard em tempo real
+
+**Costureira:** recebe login do owner → acessa `/costureira` → registra produção por turno
 
 ---
 

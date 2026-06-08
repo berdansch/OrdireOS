@@ -244,6 +244,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [showUsers, setShowUsers] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -256,6 +257,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
         router.replace("/login");
         return;
       }
+      setUserName(user?.name ?? null);
       setReady(true);
     }
     init();
@@ -268,7 +270,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
       <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
         <div>
           <p className="text-xs text-gray-400">OrdireOS</p>
-          <p className="text-sm font-semibold text-gray-900">{user?.name ?? "Carregando..."}</p>
+          <p className="text-sm font-semibold text-gray-900">{userName ?? "..."}</p>
         </div>
         <div className="flex items-center gap-2">
           <button

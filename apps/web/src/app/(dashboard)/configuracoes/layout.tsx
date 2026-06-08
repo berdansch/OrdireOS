@@ -9,6 +9,7 @@ import Link from "next/link";
 export default function ConfiguracoesLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [ready, setReady] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
@@ -21,6 +22,7 @@ export default function ConfiguracoesLayout({ children }: { children: React.Reac
         router.replace("/login");
         return;
       }
+      setUserName(tokenStore.getUser()?.name ?? null);
       setReady(true);
     }
     init();
@@ -35,7 +37,7 @@ export default function ConfiguracoesLayout({ children }: { children: React.Reac
           <Link href="/owner" className="text-gray-400 hover:text-gray-700 text-sm">←</Link>
           <div>
             <p className="text-xs text-gray-400">OrdireOS</p>
-            <p className="text-sm font-semibold text-gray-900">{user?.name ?? "Carregando..."}</p>
+            <p className="text-sm font-semibold text-gray-900">{userName ?? "..."}</p>
           </div>
         </div>
         <button

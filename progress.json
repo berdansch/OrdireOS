@@ -57,26 +57,14 @@
       "title": "Dashboard do proprietario",
       "status": "done",
       "completed_at": "2026-05-23",
-      "confirmed_by": "Bernardo",
-      "tasks": [
-        { "id": "M7.1", "title": "Estrutura base + seletor de periodo", "done": true },
-        { "id": "M7.2", "title": "Metricas de volume", "done": true },
-        { "id": "M7.3", "title": "Metricas de qualidade e custo", "done": true },
-        { "id": "M7.4", "title": "UX e refinamento", "done": true }
-      ]
+      "confirmed_by": "Bernardo"
     },
     {
       "id": "M8",
       "title": "Deploy em producao",
       "status": "done",
       "completed_at": "2026-06-07",
-      "confirmed_by": "Bernardo",
-      "tasks": [
-        { "id": "M8.1", "title": "Configurar Vercel (web)", "done": true },
-        { "id": "M8.2", "title": "Configurar Cloudflare Workers (api)", "done": true },
-        { "id": "M8.3", "title": "Variaveis de ambiente em producao", "done": true },
-        { "id": "M8.4", "title": "Testar fluxo completo em producao", "done": true }
-      ]
+      "confirmed_by": "Bernardo"
     }
   ],
   "sprints": [
@@ -96,14 +84,21 @@
     },
     {
       "id": "Sprint3",
-      "title": "Race condition nos layouts + Neon HTTP timestamp fix + price_per_piece migration + GET /production-logs/my",
+      "title": "Race condition nos layouts + Neon HTTP timestamp fix + price_per_piece migration",
       "status": "done",
       "completed_at": "2026-06-07",
       "confirmed_by": "Bernardo"
     },
     {
       "id": "Sprint4",
-      "title": "Auth client-side em producao: sessionStorage no tokenStore + middleware simplificado",
+      "title": "Auth client-side em producao: sessionStorage + middleware com cookie de sessao leve",
+      "status": "done",
+      "completed_at": "2026-06-07",
+      "confirmed_by": "Bernardo"
+    },
+    {
+      "id": "Sprint5",
+      "title": "Onboarding em 3 etapas + fix db.transaction incompativel com Neon HTTP + gestao de usuarios UI + nav header owner + layouts auth para ordens/operacoes + fix seamstress 403 em production-orders",
       "status": "done",
       "completed_at": "2026-06-07",
       "confirmed_by": "Bernardo"
