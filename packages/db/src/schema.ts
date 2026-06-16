@@ -23,6 +23,7 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   role: userRoleEnum("role").notNull(),
   active: boolean("active").notNull().default(true),
+  requiresPasswordChange: boolean("requires_password_change").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -60,16 +61,40 @@ export const productionLogs = pgTable("production_logs", {
   loggedAt: timestamp("logged_at").notNull().defaultNow(),
 });
 
+export const payrollPeriods = pgTable("payroll_periods", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tenantId: uuid("tenant_id").notNull().references(() => tenants.id, { onDelete: "cascade" }),
+  startDate: text("start_date").notNull(), // DATE como text — evita bug Neon HTTP com Date bind params
+  endDate: text("end_date").notNull(),
+  status: text("status").notNull().default("open"), // "open" | "closed"
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  closedAt: timestamp("closed_at"),
+});
+
+export const advances = pgTable("advances", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  tenantId: uuid("tenant_id").notNull().references(() => tenants.id, { onDelete: "cascade" }),
+  periodId: uuid("period_id").notNull().references(() => payrollPeriods.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+  note: text("note"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ─── Relations ───────────────────────────────────────────────────────────────
+
 export const tenantsRelations = relations(tenants, ({ many }) => ({
   users: many(users),
   productionOrders: many(productionOrders),
   operations: many(operations),
   productionLogs: many(productionLogs),
+  payrollPeriods: many(payrollPeriods),
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   tenant: one(tenants, { fields: [users.tenantId], references: [tenants.id] }),
   productionLogs: many(productionLogs),
+  advances: many(advances),
 }));
 
 export const productionOrdersRelations = relations(productionOrders, ({ one, many }) => ({
@@ -87,4 +112,15 @@ export const productionLogsRelations = relations(productionLogs, ({ one }) => ({
   user: one(users, { fields: [productionLogs.userId], references: [users.id] }),
   productionOrder: one(productionOrders, { fields: [productionLogs.productionOrderId], references: [productionOrders.id] }),
   operation: one(operations, { fields: [productionLogs.operationId], references: [operations.id] }),
+}));
+
+export const payrollPeriodsRelations = relations(payrollPeriods, ({ one, many }) => ({
+  tenant: one(tenants, { fields: [payrollPeriods.tenantId], references: [tenants.id] }),
+  advances: many(advances),
+}));
+
+export const advancesRelations = relations(advances, ({ one }) => ({
+  tenant: one(tenants, { fields: [advances.tenantId], references: [tenants.id] }),
+  period: one(payrollPeriods, { fields: [advances.periodId], references: [payrollPeriods.id] }),
+  user: one(users, { fields: [advances.userId], references: [users.id] }),
 }));

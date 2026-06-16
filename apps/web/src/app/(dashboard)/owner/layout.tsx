@@ -291,6 +291,12 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
           >
             Operações
           </a>
+          <a
+            href="/owner/payroll"
+            className="text-xs text-gray-600 font-medium px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50"
+          >
+            Folha
+          </a>
           <button
             onClick={async () => {
               await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {

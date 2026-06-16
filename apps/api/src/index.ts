@@ -8,6 +8,7 @@ import { productionOrdersRoutes } from "./routes/production-orders";
 import { productionLogsRoutes } from "./routes/production-logs";
 import { dashboardRoutes } from "./routes/dashboard";
 import { onboardingRoutes } from "./routes/onboarding";
+import { payrollRoutes } from "./routes/payroll";
 
 export type Env = {
   DATABASE_URL: string;
@@ -56,6 +57,7 @@ app.route("/production-orders", productionOrdersRoutes);
 app.route("/production-logs", productionLogsRoutes);
 app.route("/dashboard", dashboardRoutes);
 app.route("/onboarding", onboardingRoutes);
+app.route("/payroll", payrollRoutes);
 
 app.notFound((c) => c.json({ error: "Rota nao encontrada" }, 404));
 

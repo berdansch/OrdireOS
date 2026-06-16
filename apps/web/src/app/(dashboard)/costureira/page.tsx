@@ -1,14 +1,44 @@
 "use client";
 
 // apps/web/src/app/(dashboard)/costureira/page.tsx
-// Refatorado: tipos importados do @ordireos/db — sem tipos manuais
 
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "@/lib/auth/api-client";
 
-// ANTES: type ProductionOrder = { id: string; reference: string; ... }
-// DEPOIS: importado diretamente do schema Drizzle
 import type { ProductionOrder, Operation, DailyHistory } from "@ordireos/db";
+
+type SeamstressStats = {
+  week: { pieces: number };
+  month: { pieces: number; estimatedEarnings: number };
+};
+
+function formatCurrency(value: number): string {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function StatsSection({ stats }: { stats: SeamstressStats }) {
+  const hasEarnings = stats.month.estimatedEarnings > 0;
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <p className="text-xs font-medium text-gray-400">Pecas esta semana</p>
+        <p className="text-2xl font-bold text-gray-900 mt-1">
+          {stats.week.pieces.toLocaleString("pt-BR")}
+        </p>
+        <p className="text-xs text-gray-400 mt-0.5">ultimos 7 dias</p>
+      </div>
+      <div className={`rounded-2xl border shadow-sm p-4 ${hasEarnings ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100"}`}>
+        <p className="text-xs font-medium text-gray-400">Ganho estimado</p>
+        <p className={`text-2xl font-bold mt-1 ${hasEarnings ? "text-white" : "text-gray-900"}`}>
+          {hasEarnings ? formatCurrency(stats.month.estimatedEarnings) : "—"}
+        </p>
+        <p className="text-xs text-gray-400 mt-0.5">
+          {stats.month.pieces.toLocaleString("pt-BR")} pcs no mes
+        </p>
+      </div>
+    </div>
+  );
+}
 
 const SHIFT_LABELS: Record<string, string> = {
   morning: "Manha",
@@ -26,6 +56,10 @@ function formatTime(dateStr: string): string {
 function LoadingSkeleton() {
   return (
     <div className="max-w-lg mx-auto space-y-4 animate-pulse">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 h-24" />
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 h-24" />
+      </div>
       <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
         <div className="h-4 bg-gray-100 rounded w-1/3" />
         <div className="h-12 bg-gray-100 rounded-xl" />
@@ -38,10 +72,10 @@ function LoadingSkeleton() {
 }
 
 export default function CostureiraPage() {
-  // Tipos agora vem do Drizzle — se o schema mudar, o TypeScript avisa aqui
   const [orders, setOrders] = useState<ProductionOrder[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
   const [history, setHistory] = useState<DailyHistory>({ logs: [], total: 0 });
+  const [stats, setStats] = useState<SeamstressStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -57,6 +91,15 @@ export default function CostureiraPage() {
       setHistory(data);
     } catch (err) {
       console.error("[loadHistory]", err);
+    }
+  }, []);
+
+  const loadStats = useCallback(async () => {
+    try {
+      const data = await apiClient<SeamstressStats>("/production-logs/my-stats");
+      setStats(data);
+    } catch (err) {
+      console.error("[loadStats]", err);
     }
   }, []);
 
@@ -87,8 +130,8 @@ export default function CostureiraPage() {
   }, []);
 
   useEffect(() => {
-    Promise.all([loadData(), loadHistory()]);
-  }, [loadData, loadHistory]);
+    Promise.all([loadData(), loadHistory(), loadStats()]);
+  }, [loadData, loadHistory, loadStats]);
 
   function validateForm(): string | null {
     if (!selectedOrderId) return "Selecione uma ordem de producao.";
@@ -123,7 +166,7 @@ export default function CostureiraPage() {
       setReworkQuantity("");
       setSuccess(true);
       setTimeout(() => setSuccess(false), 5000);
-      await loadHistory();
+      await Promise.all([loadHistory(), loadStats()]);
     } catch (err) {
       console.error("[handleSubmit]", err);
       setError(err instanceof Error ? err.message : "Nao foi possivel registrar a producao.");
@@ -172,6 +215,10 @@ export default function CostureiraPage() {
 
   return (
     <div className="max-w-lg mx-auto space-y-4 pb-8">
+
+      {/* Stats: semana + ganho estimado */}
+      {stats && <StatsSection stats={stats} />}
+
       {success && (
         <div className="bg-green-50 border border-green-100 rounded-2xl px-4 py-4 text-center">
           <p className="text-base">✅</p>
