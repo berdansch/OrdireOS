@@ -3,7 +3,7 @@ import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { createDb, users } from "@ordireos/db";
-import { signAccessToken, signRefreshToken, verifyToken, type RefreshTokenPayload } from "../lib/jwt";
+import { signAccessToken, signRefreshToken, signTempToken, verifyToken, type RefreshTokenPayload, type TempTokenPayload } from "../lib/jwt";
 import type { AppContext } from "../index";
 
 export const authRoutes = new Hono<AppContext>();
@@ -29,6 +29,42 @@ authRoutes.post("/login", async (c) => {
 
   const passwordValid = await bcrypt.compare(body.password, user.passwordHash);
   if (!passwordValid) return c.json({ error: "Credenciais invalidas" }, 401);
+
+  if (user.requiresPasswordChange) {
+    const tempToken = await signTempToken(
+      { user_id: user.id, tenant_id: user.tenantId, role: user.role, purpose: "password_change" },
+      c.env.JWT_SECRET
+    );
+    return c.json({ requires_password_change: true, temp_token: tempToken });
+  }
+
+  const accessToken = await signAccessToken({ user_id: user.id, tenant_id: user.tenantId, role: user.role }, c.env.JWT_SECRET);
+  const refreshToken = await signRefreshToken({ user_id: user.id, tenant_id: user.tenantId, jti: crypto.randomUUID() }, c.env.JWT_REFRESH_SECRET);
+
+  setCookie(c, REFRESH_COOKIE, refreshToken, COOKIE_OPTIONS);
+  return c.json({ access_token: accessToken, user: { id: user.id, name: user.name, role: user.role, tenant_id: user.tenantId } });
+});
+
+authRoutes.post("/change-password", async (c) => {
+  const body = await c.req.json<{ temp_token?: string; new_password?: string; confirm_password?: string }>();
+
+  if (!body.temp_token || typeof body.temp_token !== "string") return c.json({ error: "Token ausente" }, 400);
+  if (!body.new_password || typeof body.new_password !== "string" || body.new_password.length < 6)
+    return c.json({ error: "Senha deve ter pelo menos 6 caracteres" }, 400);
+  if (body.new_password !== body.confirm_password) return c.json({ error: "Senhas nao conferem" }, 400);
+
+  const payload = await verifyToken<TempTokenPayload>(body.temp_token, c.env.JWT_SECRET);
+  if (!payload || payload.purpose !== "password_change") return c.json({ error: "Token invalido ou expirado" }, 401);
+
+  const db = createDb(c.env.DATABASE_URL);
+  const [user] = await db.select().from(users).where(eq(users.id, payload.user_id)).limit(1);
+  if (!user || !user.active) return c.json({ error: "Usuario nao encontrado ou inativo" }, 401);
+
+  const passwordHash = await bcrypt.hash(body.new_password, 10);
+  await db
+    .update(users)
+    .set({ passwordHash, requiresPasswordChange: false })
+    .where(eq(users.id, user.id));
 
   const accessToken = await signAccessToken({ user_id: user.id, tenant_id: user.tenantId, role: user.role }, c.env.JWT_SECRET);
   const refreshToken = await signRefreshToken({ user_id: user.id, tenant_id: user.tenantId, jti: crypto.randomUUID() }, c.env.JWT_REFRESH_SECRET);

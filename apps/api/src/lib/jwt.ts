@@ -30,6 +30,22 @@ export async function signRefreshToken(payload: RefreshTokenPayload, secret: str
     .sign(key);
 }
 
+export type TempTokenPayload = {
+  user_id: string;
+  tenant_id: string;
+  role: "owner" | "supervisor" | "seamstress";
+  purpose: "password_change";
+};
+
+export async function signTempToken(payload: TempTokenPayload, secret: string): Promise<string> {
+  const key = new TextEncoder().encode(secret);
+  return new SignJWT({ ...payload })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("15m")
+    .sign(key);
+}
+
 export async function verifyToken<T>(token: string, secret: string): Promise<T | null> {
   try {
     const key = new TextEncoder().encode(secret);

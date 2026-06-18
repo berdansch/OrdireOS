@@ -39,6 +39,7 @@ usersRoutes.post("/", authMiddleware, requireRole(["owner"]), async (c) => {
     email: body.email.toLowerCase().trim(),
     passwordHash,
     role: body.role as "supervisor" | "seamstress",
+    requiresPasswordChange: true,
   }).returning({ id: users.id, name: users.name, email: users.email, role: users.role, active: users.active, createdAt: users.createdAt });
 
   return c.json(user, 201);

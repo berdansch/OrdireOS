@@ -14,6 +14,11 @@ type LoginResponse = {
   };
 };
 
+type PasswordChangeRequired = {
+  requires_password_change: true;
+  temp_token: string;
+};
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -42,8 +47,15 @@ function LoginForm() {
         return;
       }
 
-      const data = await res.json() as LoginResponse;
-      tokenStore.setAuth(data.access_token, data.user);
+      const data = await res.json() as LoginResponse | PasswordChangeRequired;
+
+      if ("requires_password_change" in data && data.requires_password_change) {
+        router.replace(`/change-password?token=${encodeURIComponent(data.temp_token)}`);
+        return;
+      }
+
+      const loginData = data as LoginResponse;
+      tokenStore.setAuth(loginData.access_token, loginData.user);
 
       const roleRedirect: Record<string, string> = {
         seamstress: "/costureira",
@@ -51,7 +63,7 @@ function LoginForm() {
         owner: "/owner",
       };
 
-      router.replace(roleRedirect[data.user.role] ?? redirect);
+      router.replace(roleRedirect[loginData.user.role] ?? redirect);
     } catch {
       setError("Erro de conexao. Tente novamente.");
     } finally {
