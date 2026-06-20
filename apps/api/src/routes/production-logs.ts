@@ -147,3 +147,59 @@ productionLogsRoutes.post("/", authMiddleware, async (c) => {
 
   return c.json(log, 201);
 });
+
+// GET /production-logs/my-history — últimos 30 dias agrupados por dia
+productionLogsRoutes.get("/my-history", authMiddleware, async (c) => {
+  const { tenant_id, user_id } = c.get("auth");
+  const db = createDb(c.env.DATABASE_URL);
+
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const fmt = (d: Date) => "'" + d.toISOString() + "'";
+
+  const rows = await db
+    .select({
+      quantity: productionLogs.quantity,
+      reworkQuantity: productionLogs.reworkQuantity,
+      loggedAt: productionLogs.loggedAt,
+      pricePerPiece: operations.pricePerPiece,
+    })
+    .from(productionLogs)
+    .innerJoin(operations, eq(productionLogs.operationId, operations.id))
+    .where(
+      and(
+        eq(productionLogs.tenantId, tenant_id),
+        eq(productionLogs.userId, user_id),
+        sql`${productionLogs.loggedAt} >= ${sql.raw(fmt(thirtyDaysAgo))}::timestamptz`,
+      )
+    )
+    .orderBy(productionLogs.loggedAt);
+
+  // Agrupar por dia (YYYY-MM-DD em BRT = UTC-3)
+  const dayMap = new Map<string, { pieces: number; earnings: number }>();
+
+  for (const row of rows) {
+    const date = new Date(row.loggedAt);
+    // Ajuste BRT: subtrai 3h para converter UTC → BRT
+    const brtDate = new Date(date.getTime() - 3 * 60 * 60 * 1000);
+    const day = brtDate.toISOString().slice(0, 10);
+
+    const existing = dayMap.get(day) ?? { pieces: 0, earnings: 0 };
+    existing.pieces += row.quantity;
+    if (row.pricePerPiece) {
+      existing.earnings += row.quantity * parseFloat(row.pricePerPiece);
+    }
+    dayMap.set(day, existing);
+  }
+
+  // Ordenar do mais recente para o mais antigo
+  const days = Array.from(dayMap.entries())
+    .map(([date, data]) => ({
+      date,
+      pieces: data.pieces,
+      earnings: Math.round(data.earnings * 100) / 100,
+    }))
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  return c.json({ days });
+});

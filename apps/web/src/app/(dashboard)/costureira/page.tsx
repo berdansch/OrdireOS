@@ -12,8 +12,39 @@ type SeamstressStats = {
   month: { pieces: number; estimatedEarnings: number };
 };
 
+type HistoryDay = {
+  date: string;
+  pieces: number;
+  earnings: number;
+};
+
+type SeamstressHistory = {
+  days: HistoryDay[];
+};
+
+type Tab = "registrar" | "historico";
+
 function formatCurrency(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function formatDateBR(dateStr: string): string {
+  const [year, month, day] = dateStr.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+function formatDayLabel(dateStr: string): string {
+  const date = new Date(dateStr + "T12:00:00");
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  const todayStr = today.toISOString().slice(0, 10);
+  const yesterdayStr = yesterday.toISOString().slice(0, 10);
+
+  if (dateStr === todayStr) return "Hoje";
+  if (dateStr === yesterdayStr) return "Ontem";
+  return formatDateBR(dateStr);
 }
 
 function StatsSection({ stats }: { stats: SeamstressStats }) {
@@ -67,18 +98,87 @@ function LoadingSkeleton() {
         <div className="h-4 bg-gray-100 rounded w-1/3" />
         <div className="h-12 bg-gray-100 rounded-xl" />
         <div className="h-12 bg-gray-100 rounded-xl" />
-        <div className="h-12 bg-gray-100 rounded-xl" />
         <div className="h-14 bg-gray-100 rounded-xl" />
       </div>
     </div>
   );
 }
 
+function HistoryTab({ history }: { history: SeamstressHistory | null }) {
+  if (!history) return (
+    <div className="flex items-center justify-center py-12">
+      <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
+    </div>
+  );
+
+  if (history.days.length === 0) return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+      <p className="text-2xl mb-2">📊</p>
+      <p className="text-sm font-medium text-gray-700">Nenhum registro nos ultimos 30 dias</p>
+      <p className="text-xs text-gray-400 mt-1">Registre sua producao para ver o historico aqui.</p>
+    </div>
+  );
+
+  const totalPieces = history.days.reduce((sum, d) => sum + d.pieces, 0);
+  const totalEarnings = history.days.reduce((sum, d) => sum + d.earnings, 0);
+  const maxPieces = Math.max(...history.days.map((d) => d.pieces));
+
+  return (
+    <div className="space-y-4">
+      {/* Resumo 30 dias */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <p className="text-xs font-medium text-gray-400">Total 30 dias</p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{totalPieces.toLocaleString("pt-BR")}</p>
+          <p className="text-xs text-gray-400 mt-0.5">pecas produzidas</p>
+        </div>
+        {totalEarnings > 0 && (
+          <div className="bg-gray-900 rounded-2xl border border-gray-800 shadow-sm p-4">
+            <p className="text-xs font-medium text-gray-400">Ganho 30 dias</p>
+            <p className="text-2xl font-bold text-white mt-1">{formatCurrency(totalEarnings)}</p>
+            <p className="text-xs text-gray-400 mt-0.5">estimado</p>
+          </div>
+        )}
+      </div>
+
+      {/* Lista por dia */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <h2 className="text-sm font-semibold text-gray-700 mb-4">Por dia</h2>
+        <div className="space-y-3">
+          {history.days.map((day) => {
+            const barPct = maxPieces > 0 ? (day.pieces / maxPieces) * 100 : 0;
+            return (
+              <div key={day.date}>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-sm font-medium text-gray-900">{formatDayLabel(day.date)}</p>
+                  <div className="text-right">
+                    <span className="text-sm font-bold text-gray-900">{day.pieces.toLocaleString("pt-BR")}</span>
+                    <span className="text-xs text-gray-400 ml-1">pcs</span>
+                    {day.earnings > 0 && (
+                      <span className="text-xs text-gray-400 ml-2">{formatCurrency(day.earnings)}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-1.5">
+                  <div className="bg-gray-900 h-1.5 rounded-full transition-all" style={{ width: `${barPct}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CostureiraPage() {
+  const [tab, setTab] = useState<Tab>("registrar");
   const [orders, setOrders] = useState<ProductionOrder[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
   const [history, setHistory] = useState<DailyHistory>({ logs: [], total: 0 });
   const [stats, setStats] = useState<SeamstressStats | null>(null);
+  const [seamstressHistory, setSeamstressHistory] = useState<SeamstressHistory | null>(null);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -103,6 +203,16 @@ export default function CostureiraPage() {
       setStats(data);
     } catch (err) {
       console.error("[loadStats]", err);
+    }
+  }, []);
+
+  const loadSeamstressHistory = useCallback(async () => {
+    try {
+      const data = await apiClient<SeamstressHistory>("/production-logs/my-history");
+      setSeamstressHistory(data);
+      setHistoryLoaded(true);
+    } catch (err) {
+      console.error("[loadSeamstressHistory]", err);
     }
   }, []);
 
@@ -135,6 +245,13 @@ export default function CostureiraPage() {
   useEffect(() => {
     Promise.all([loadData(), loadHistory(), loadStats()]);
   }, [loadData, loadHistory, loadStats]);
+
+  // Carrega histórico apenas quando a aba for aberta pela primeira vez
+  useEffect(() => {
+    if (tab === "historico" && !historyLoaded) {
+      loadSeamstressHistory();
+    }
+  }, [tab, historyLoaded, loadSeamstressHistory]);
 
   function validateForm(): string | null {
     if (!selectedOrderId) return "Selecione uma ordem de producao.";
@@ -169,6 +286,8 @@ export default function CostureiraPage() {
       setReworkQuantity("");
       setSuccess(true);
       setTimeout(() => setSuccess(false), 5000);
+      // Recarrega histórico e stats após novo registro
+      setHistoryLoaded(false);
       await Promise.all([loadHistory(), loadStats()]);
     } catch (err) {
       console.error("[handleSubmit]", err);
@@ -219,122 +338,142 @@ export default function CostureiraPage() {
   return (
     <div className="max-w-lg mx-auto space-y-4 pb-8">
 
-      {/* Stats: semana + ganho estimado */}
+      {/* Stats sempre visíveis */}
       {stats && <StatsSection stats={stats} />}
 
-      {success && (
-        <div className="bg-green-50 border border-green-100 rounded-2xl px-4 py-4 text-center">
-          <p className="text-base">✅</p>
-          <p className="text-sm font-semibold text-green-700 mt-1">Producao registrada com sucesso!</p>
-          <p className="text-xs text-green-600 mt-1">Em caso de erro, fale com seu supervisor.</p>
-        </div>
+      {/* Tabs */}
+      <div className="flex gap-2">
+        {(["registrar", "historico"] as Tab[]).map((t) => (
+          <button key={t} onClick={() => setTab(t)}
+            className={`flex-1 h-10 rounded-xl text-sm font-medium transition-colors ${
+              tab === t ? "bg-gray-900 text-white" : "bg-white border border-gray-200 text-gray-600"
+            }`}>
+            {t === "registrar" ? "Registrar" : "Historico"}
+          </button>
+        ))}
+      </div>
+
+      {/* Aba Registrar */}
+      {tab === "registrar" && (
+        <>
+          {success && (
+            <div className="bg-green-50 border border-green-100 rounded-2xl px-4 py-4 text-center">
+              <p className="text-base">✅</p>
+              <p className="text-sm font-semibold text-green-700 mt-1">Producao registrada com sucesso!</p>
+              <p className="text-xs text-green-600 mt-1">Em caso de erro, fale com seu supervisor.</p>
+            </div>
+          )}
+
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+            <h2 className="text-sm font-semibold text-gray-700">Registrar producao</h2>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ordem de producao <span className="text-red-400">*</span>
+              </label>
+              <select value={selectedOrderId} onChange={(e) => { setSelectedOrderId(e.target.value); setError(""); }}
+                className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900">
+                <option value="">Selecione...</option>
+                {orders.map((order) => (
+                  <option key={order.id} value={order.id}>
+                    {order.reference}
+                    {order.status === "in_progress" ? " (em andamento)" : ""}
+                    {order.clientName ? ` — ${order.clientName}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Operacao <span className="text-red-400">*</span>
+              </label>
+              <select value={selectedOperationId} onChange={(e) => { setSelectedOperationId(e.target.value); setError(""); }}
+                className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900">
+                <option value="">Selecione...</option>
+                {operations.map((op) => (
+                  <option key={op.id} value={op.id}>{op.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Quantidade produzida <span className="text-red-400">*</span>
+              </label>
+              <input type="number" inputMode="numeric" pattern="[0-9]*"
+                value={quantity} onChange={(e) => { setQuantity(e.target.value); setError(""); }}
+                placeholder="0" min="1"
+                className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-900 text-lg font-medium" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Retrabalho <span className="text-gray-400 font-normal">(opcional)</span>
+              </label>
+              <input type="number" inputMode="numeric" pattern="[0-9]*"
+                value={reworkQuantity} onChange={(e) => { setReworkQuantity(e.target.value); setError(""); }}
+                placeholder="0" min="0"
+                className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-900 text-lg font-medium" />
+            </div>
+
+            {error && (
+              <div className="bg-red-50 rounded-xl px-4 py-3">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
+            <button onClick={handleSubmit} disabled={submitting}
+              className="w-full h-14 bg-gray-900 text-white font-semibold rounded-xl disabled:opacity-60 active:scale-95 transition-all text-base flex items-center justify-center gap-2">
+              {submitting ? (
+                <><span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Registrando...</>
+              ) : "Registrar producao"}
+            </button>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-gray-700">Meu dia</h2>
+              {history.total > 0 && (
+                <span className="text-sm font-bold text-gray-900">
+                  {history.total} {history.total === 1 ? "peca" : "pecas"}
+                </span>
+              )}
+            </div>
+
+            {history.logs.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">Nenhum lancamento ainda hoje.</p>
+            ) : (
+              <div className="space-y-2">
+                {history.logs.map((log) => (
+                  <div key={log.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{log.operationName}</p>
+                      <p className="text-xs text-gray-400">
+                        {log.orderReference}
+                        {log.shift ? ` · ${SHIFT_LABELS[log.shift]}` : ""}
+                        {" · "}{formatTime(log.loggedAt.toString())}
+                      </p>
+                      {log.reworkQuantity > 0 && (
+                        <p className="text-xs text-orange-500">
+                          {log.reworkQuantity} {log.reworkQuantity === 1 ? "peca" : "pecas"} de retrabalho
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-gray-900">{log.quantity}</p>
+                      <p className="text-xs text-gray-400">pecas</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
       )}
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
-        <h2 className="text-sm font-semibold text-gray-700">Registrar producao</h2>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Ordem de producao <span className="text-red-400">*</span>
-          </label>
-          <select value={selectedOrderId} onChange={(e) => { setSelectedOrderId(e.target.value); setError(""); }}
-            className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900">
-            <option value="">Selecione...</option>
-            {orders.map((order) => (
-              <option key={order.id} value={order.id}>
-                {order.reference}
-                {order.status === "in_progress" ? " (em andamento)" : ""}
-                {order.clientName ? ` — ${order.clientName}` : ""}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Operacao <span className="text-red-400">*</span>
-          </label>
-          <select value={selectedOperationId} onChange={(e) => { setSelectedOperationId(e.target.value); setError(""); }}
-            className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900">
-            <option value="">Selecione...</option>
-            {operations.map((op) => (
-              <option key={op.id} value={op.id}>{op.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Quantidade produzida <span className="text-red-400">*</span>
-          </label>
-          <input type="number" inputMode="numeric" pattern="[0-9]*"
-            value={quantity} onChange={(e) => { setQuantity(e.target.value); setError(""); }}
-            placeholder="0" min="1"
-            className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-900 text-lg font-medium" />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Retrabalho <span className="text-gray-400 font-normal">(opcional)</span>
-          </label>
-          <input type="number" inputMode="numeric" pattern="[0-9]*"
-            value={reworkQuantity} onChange={(e) => { setReworkQuantity(e.target.value); setError(""); }}
-            placeholder="0" min="0"
-            className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-900 text-lg font-medium" />
-        </div>
-
-        {error && (
-          <div className="bg-red-50 rounded-xl px-4 py-3">
-            <p className="text-sm text-red-600">{error}</p>
-          </div>
-        )}
-
-        <button onClick={handleSubmit} disabled={submitting}
-          className="w-full h-14 bg-gray-900 text-white font-semibold rounded-xl disabled:opacity-60 active:scale-95 transition-all text-base flex items-center justify-center gap-2">
-          {submitting ? (
-            <><span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Registrando...</>
-          ) : "Registrar producao"}
-        </button>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-gray-700">Meu dia</h2>
-          {history.total > 0 && (
-            <span className="text-sm font-bold text-gray-900">
-              {history.total} {history.total === 1 ? "peca" : "pecas"}
-            </span>
-          )}
-        </div>
-
-        {history.logs.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-4">Nenhum lancamento ainda hoje.</p>
-        ) : (
-          <div className="space-y-2">
-            {history.logs.map((log) => (
-              <div key={log.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{log.operationName}</p>
-                  <p className="text-xs text-gray-400">
-                    {log.orderReference}
-                    {log.shift ? ` · ${SHIFT_LABELS[log.shift]}` : ""}
-                    {" · "}{formatTime(log.loggedAt.toString())}
-                  </p>
-                  {log.reworkQuantity > 0 && (
-                    <p className="text-xs text-orange-500">
-                      {log.reworkQuantity} {log.reworkQuantity === 1 ? "peca" : "pecas"} de retrabalho
-                    </p>
-                  )}
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-gray-900">{log.quantity}</p>
-                  <p className="text-xs text-gray-400">pecas</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Aba Histórico */}
+      {tab === "historico" && <HistoryTab history={seamstressHistory} />}
     </div>
   );
 }
