@@ -253,7 +253,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
         if (!token) { router.replace("/login"); return; }
       }
       const user = tokenStore.getUser();
-      if (user && user.role !== "owner" && user.role !== "supervisor") {
+      if (user && user.role !== "owner") {
         router.replace("/login");
         return;
       }
