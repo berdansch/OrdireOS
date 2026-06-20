@@ -114,10 +114,12 @@ function KpiCard({
       <p className={`text-2xl font-bold ${highlight ? "text-white" : "text-gray-900"}`}>{value}</p>
       <div className="flex items-center gap-2">
         {sub && <p className="text-xs text-gray-400">{sub}</p>}
-        {delta != null && (
+        {delta != null ? (
           <p className={`text-xs font-semibold ${deltaColor}`}>
             {deltaSign}{delta}%
           </p>
+        ) : (
+          <p className="text-xs text-gray-400">primeira semana</p>
         )}
       </div>
     </div>

@@ -35,6 +35,9 @@ function StatsSection({ stats }: { stats: SeamstressStats }) {
         <p className="text-xs text-gray-400 mt-0.5">
           {stats.month.pieces.toLocaleString("pt-BR")} pcs no mes
         </p>
+        {!hasEarnings && stats.month.pieces > 0 && (
+          <p className="text-xs text-gray-400 mt-1">operacoes sem preco nao entram no calculo</p>
+        )}
       </div>
     </div>
   );

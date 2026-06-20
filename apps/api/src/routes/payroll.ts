@@ -88,6 +88,18 @@ payrollRoutes.get("/periods/:id", authMiddleware, requireRole(["owner"]), async 
       )
     );
 
+  // Todas as costureiras ativas do tenant — para exibir zeradas se não tiverem logs
+  const allSeamstresses = await db
+    .select({ id: users.id, name: users.name })
+    .from(users)
+    .where(
+      and(
+        eq(users.tenantId, tenant_id),
+        sql`${users.role} IN ('seamstress', 'supervisor')`,
+        sql`${users.active} = true`,
+      )
+    );
+
   // Vales do período
   const periodAdvances = await db
     .select({
@@ -116,6 +128,20 @@ payrollRoutes.get("/periods/:id", authMiddleware, requireRole(["owner"]), async 
     advances: number;
     netEarnings: number;
   }>();
+
+  // Inicializar todas as costureiras com zero — garante que aparecem mesmo sem logs
+  for (const s of allSeamstresses) {
+    if (!seamstressMap.has(s.id)) {
+      seamstressMap.set(s.id, {
+        userId: s.id,
+        userName: s.name,
+        pieces: 0,
+        grossEarnings: 0,
+        advances: 0,
+        netEarnings: 0,
+      });
+    }
+  }
 
   for (const log of logs) {
     const existing = seamstressMap.get(log.userId) ?? {
