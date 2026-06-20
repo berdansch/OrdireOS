@@ -12,6 +12,8 @@ export const tenants = pgTable("tenants", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  plan: text("plan").notNull().default("trial"), // "trial" | "active" | "expired"
+  trialEndsAt: timestamp("trial_ends_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

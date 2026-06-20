@@ -39,6 +39,14 @@ export async function apiClient<T>(path: string, options: RequestOptions = {}): 
     res = await makeRequest(token);
   }
 
+  if (res.status === 403) {
+    const error = await res.json().catch(() => ({ error: "" }));
+    if ((error as { error: string }).error === "trial_expired") {
+      window.location.href = "/expired";
+      throw new Error("trial_expired");
+    }
+  }
+
   if (!res.ok) {
     const error = await res.json().catch(() => ({ error: "Erro desconhecido" }));
     throw new Error((error as { error: string }).error ?? "Erro na requisicao");

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_ROUTES = ["/login", "/onboarding", "/change-password"];
+const PUBLIC_ROUTES = ["/login", "/onboarding", "/change-password", "/expired"];
 const PROTECTED_ROUTES = ["/owner", "/costureira", "/supervisor", "/ordens", "/configuracoes", "/usuarios"];
 
 const SESSION_COOKIE = "ordireos_session";

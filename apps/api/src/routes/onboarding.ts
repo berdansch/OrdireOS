@@ -46,10 +46,20 @@ onboardingRoutes.post("/register", async (c) => {
     .limit(1);
   if (existingSlug) return c.json({ error: "Este identificador ja esta em uso. Escolha outro." }, 409);
 
-  // Criar tenant
+  // Criar tenant com trial de 14 dias
+  const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+  const trialEndsAtRaw = trialEndsAt.toISOString();
+
+  const { sql } = await import("drizzle-orm");
+
   const [newTenant] = await db
     .insert(tenants)
-    .values({ name: body.tenantName.trim(), slug: body.tenantSlug })
+    .values({
+      name: body.tenantName.trim(),
+      slug: body.tenantSlug,
+      plan: "trial",
+      trialEndsAt: sql.raw(\`'\${trialEndsAtRaw}'::timestamptz\`),
+    })
     .returning({ id: tenants.id });
 
   if (!newTenant) return c.json({ error: "Erro ao criar faccao. Tente novamente." }, 500);

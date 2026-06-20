@@ -9,12 +9,14 @@ import { productionLogsRoutes } from "./routes/production-logs";
 import { dashboardRoutes } from "./routes/dashboard";
 import { onboardingRoutes } from "./routes/onboarding";
 import { payrollRoutes } from "./routes/payroll";
+import { adminRoutes } from "./routes/admin";
 
 export type Env = {
   DATABASE_URL: string;
   JWT_SECRET: string;
   JWT_REFRESH_SECRET: string;
   ENVIRONMENT: string;
+  ADMIN_SECRET: string;
 };
 
 export type AppContext = {
@@ -58,6 +60,7 @@ app.route("/production-logs", productionLogsRoutes);
 app.route("/dashboard", dashboardRoutes);
 app.route("/onboarding", onboardingRoutes);
 app.route("/payroll", payrollRoutes);
+app.route("/admin", adminRoutes);
 
 app.notFound((c) => c.json({ error: "Rota nao encontrada" }, 404));
 
