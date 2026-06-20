@@ -90,6 +90,8 @@ Isolamento por `tenant_id` em todas as tabelas operacionais desde o schema. Nenh
 | Sprint 3 | Race condition nos layouts + Neon HTTP timestamp fix + price_per_piece migration | ✅ Concluído |
 | Sprint 4 | Auth client-side em produção: sessionStorage + middleware com cookie de sessão leve | ✅ Concluído |
 | Sprint 5 | Onboarding em 3 etapas + gestão de usuários UI + nav header owner + fix seamstress 403 | ✅ Concluído |
+| Sprint 6 | Dashboard KPIs + polling falso tempo real + stats da costureira + fluxo de troca de senha no 1º acesso | ✅ Concluído |
+| Sprint 7 | Módulo Payroll: períodos de folha, vales/adiantamentos e fechamento de folha | ✅ Concluído |
 
 ---
 

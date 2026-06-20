@@ -1,6 +1,6 @@
 {
   "project": "OrdireOS",
-  "last_updated": "2026-06-07",
+  "last_updated": "2026-06-18",
   "active_milestone": "done",
   "milestones": [
     {
@@ -98,9 +98,23 @@
     },
     {
       "id": "Sprint5",
-      "title": "Onboarding em 3 etapas + fix db.transaction incompativel com Neon HTTP + gestao de usuarios UI + nav header owner + layouts auth para ordens/operacoes + fix seamstress 403 em production-orders",
+      "title": "Onboarding em 3 etapas + gestao de usuarios UI + nav header owner + fix seamstress 403",
       "status": "done",
       "completed_at": "2026-06-07",
+      "confirmed_by": "Bernardo"
+    },
+    {
+      "id": "Sprint6",
+      "title": "Dashboard KPIs + polling falso tempo real + stats da costureira (semana + ganho estimado) + fluxo requires_password_change + redirect / para /login",
+      "status": "done",
+      "completed_at": "2026-06-13",
+      "confirmed_by": "Bernardo"
+    },
+    {
+      "id": "Sprint7",
+      "title": "Modulo Payroll: periodos de folha, vales/adiantamentos, fechamento, guard contra log retroativo em periodo fechado",
+      "status": "done",
+      "completed_at": "2026-06-18",
       "confirmed_by": "Bernardo"
     }
   ]
