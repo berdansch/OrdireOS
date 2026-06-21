@@ -4,11 +4,12 @@ import { createDb, payrollPeriods, advances, productionLogs, operations, users }
 import { authMiddleware } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import type { AppContext } from "../index";
+import { requireActivePlan } from "../middleware/requireActivePlan";
 
 export const payrollRoutes = new Hono<AppContext>();
 
 // GET /payroll/periods — lista períodos do tenant
-payrollRoutes.get("/periods", authMiddleware, requireRole(["owner"]), async (c) => {
+payrollRoutes.get("/periods", authMiddleware, requireActivePlan, requireRole(["owner"]), async (c) => {
   const { tenant_id } = c.get("auth");
   const db = createDb(c.env.DATABASE_URL);
 
@@ -22,7 +23,7 @@ payrollRoutes.get("/periods", authMiddleware, requireRole(["owner"]), async (c) 
 });
 
 // POST /payroll/periods — abre novo período
-payrollRoutes.post("/periods", authMiddleware, requireRole(["owner"]), async (c) => {
+payrollRoutes.post("/periods", authMiddleware, requireActivePlan, requireRole(["owner"]), async (c) => {
   const { tenant_id } = c.get("auth");
   const body = await c.req.json<{ startDate?: string; endDate?: string }>();
 
@@ -55,7 +56,7 @@ payrollRoutes.post("/periods", authMiddleware, requireRole(["owner"]), async (c)
 });
 
 // GET /payroll/periods/:id — calcula folha ao vivo
-payrollRoutes.get("/periods/:id", authMiddleware, requireRole(["owner"]), async (c) => {
+payrollRoutes.get("/periods/:id", authMiddleware, requireActivePlan, requireRole(["owner"]), async (c) => {
   const { tenant_id } = c.get("auth");
   const periodId = c.req.param("id");
   const db = createDb(c.env.DATABASE_URL);
@@ -190,7 +191,7 @@ payrollRoutes.get("/periods/:id", authMiddleware, requireRole(["owner"]), async 
 });
 
 // POST /payroll/periods/:id/close — fecha período
-payrollRoutes.post("/periods/:id/close", authMiddleware, requireRole(["owner"]), async (c) => {
+payrollRoutes.post("/periods/:id/close", authMiddleware, requireActivePlan, requireRole(["owner"]), async (c) => {
   const { tenant_id } = c.get("auth");
   const periodId = c.req.param("id");
   const db = createDb(c.env.DATABASE_URL);
@@ -220,7 +221,7 @@ payrollRoutes.post("/periods/:id/close", authMiddleware, requireRole(["owner"]),
 });
 
 // POST /payroll/periods/:id/advances — registra vale
-payrollRoutes.post("/periods/:id/advances", authMiddleware, requireRole(["owner"]), async (c) => {
+payrollRoutes.post("/periods/:id/advances", authMiddleware, requireActivePlan, requireRole(["owner"]), async (c) => {
   const { tenant_id } = c.get("auth");
   const periodId = c.req.param("id");
   const body = await c.req.json<{ userId?: string; amount?: number; note?: string }>();

@@ -4,10 +4,11 @@ import { createDb, productionOrders } from "@ordireos/db";
 import { authMiddleware } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import type { AppContext } from "../index";
+import { requireActivePlan } from "../middleware/requireActivePlan";
 
 export const productionOrdersRoutes = new Hono<AppContext>();
 
-productionOrdersRoutes.get("/", authMiddleware, requireRole(["owner", "supervisor", "seamstress"]), async (c) => {
+productionOrdersRoutes.get("/", authMiddleware, requireActivePlan, requireRole(["owner", "supervisor", "seamstress"]), async (c) => {
   const { tenant_id } = c.get("auth");
   const db = createDb(c.env.DATABASE_URL);
   const result = await db
@@ -18,7 +19,7 @@ productionOrdersRoutes.get("/", authMiddleware, requireRole(["owner", "superviso
   return c.json(result);
 });
 
-productionOrdersRoutes.post("/", authMiddleware, requireRole(["owner", "supervisor"]), async (c) => {
+productionOrdersRoutes.post("/", authMiddleware, requireActivePlan, requireRole(["owner", "supervisor"]), async (c) => {
   const { tenant_id } = c.get("auth");
   const body = await c.req.json<{ reference?: string; totalPieces?: number }>();
 

@@ -4,10 +4,11 @@ import { createDb, operations } from "@ordireos/db";
 import { authMiddleware } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import type { AppContext } from "../index";
+import { requireActivePlan } from "../middleware/requireActivePlan";
 
 export const operationsRoutes = new Hono<AppContext>();
 
-operationsRoutes.get("/", authMiddleware, async (c) => {
+operationsRoutes.get("/", authMiddleware, requireActivePlan, async (c) => {
   const { tenant_id } = c.get("auth");
   const db = createDb(c.env.DATABASE_URL);
 
@@ -23,7 +24,7 @@ operationsRoutes.get("/", authMiddleware, async (c) => {
   return c.json(result);
 });
 
-operationsRoutes.post("/", authMiddleware, requireRole(["owner"]), async (c) => {
+operationsRoutes.post("/", authMiddleware, requireActivePlan, requireRole(["owner"]), async (c) => {
   const { tenant_id } = c.get("auth");
   const body = await c.req.json<{
     name: string;
@@ -50,7 +51,7 @@ operationsRoutes.post("/", authMiddleware, requireRole(["owner"]), async (c) => 
   return c.json(operation, 201);
 });
 
-operationsRoutes.patch("/:id", authMiddleware, requireRole(["owner"]), async (c) => {
+operationsRoutes.patch("/:id", authMiddleware, requireActivePlan, requireRole(["owner"]), async (c) => {
   const { tenant_id } = c.get("auth");
   const id = c.req.param("id");
   const body = await c.req.json<{ active?: boolean; name?: string; pricePerPiece?: string }>();

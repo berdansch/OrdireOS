@@ -4,10 +4,11 @@ import { createDb, productionLogs, operations, productionOrders, users } from "@
 import { authMiddleware } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import type { AppContext } from "../index";
+import { requireActivePlan } from "../middleware/requireActivePlan";
 
 export const dashboardRoutes = new Hono<AppContext>();
 
-dashboardRoutes.get("/", authMiddleware, requireRole(["owner", "supervisor"]), async (c) => {
+dashboardRoutes.get("/", authMiddleware, requireActivePlan, requireRole(["owner", "supervisor"]), async (c) => {
   const { tenant_id } = c.get("auth");
   const startStr = c.req.query("start");
   const endStr = c.req.query("end");

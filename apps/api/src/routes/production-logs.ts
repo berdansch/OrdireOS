@@ -3,11 +3,12 @@ import { eq, and, gte, sql } from "drizzle-orm";
 import { createDb, productionLogs, operations, productionOrders, payrollPeriods } from "@ordireos/db";
 import type { AppContext } from "../index";
 import { authMiddleware } from "../middleware/auth";
+import { requireActivePlan } from "../middleware/requireActivePlan";
 
 export const productionLogsRoutes = new Hono<AppContext>();
 
 // GET /production-logs/my — histórico do dia da costureira logada
-productionLogsRoutes.get("/my", authMiddleware, async (c) => {
+productionLogsRoutes.get("/my", authMiddleware, requireActivePlan, async (c) => {
   const { tenant_id, user_id } = c.get("auth");
   const db = createDb(c.env.DATABASE_URL);
 
@@ -42,7 +43,7 @@ productionLogsRoutes.get("/my", authMiddleware, async (c) => {
 });
 
 // GET /production-logs/my-stats — total da semana + ganho estimado do mês
-productionLogsRoutes.get("/my-stats", authMiddleware, async (c) => {
+productionLogsRoutes.get("/my-stats", authMiddleware, requireActivePlan, async (c) => {
   const { tenant_id, user_id } = c.get("auth");
   const db = createDb(c.env.DATABASE_URL);
 
@@ -99,7 +100,7 @@ productionLogsRoutes.get("/my-stats", authMiddleware, async (c) => {
 });
 
 // POST /production-logs — registrar produção
-productionLogsRoutes.post("/", authMiddleware, async (c) => {
+productionLogsRoutes.post("/", authMiddleware, requireActivePlan, async (c) => {
   const { tenant_id, user_id } = c.get("auth");
   const body = await c.req.json<{
     productionOrderId?: string;
@@ -149,7 +150,7 @@ productionLogsRoutes.post("/", authMiddleware, async (c) => {
 });
 
 // GET /production-logs/my-history — últimos 30 dias agrupados por dia
-productionLogsRoutes.get("/my-history", authMiddleware, async (c) => {
+productionLogsRoutes.get("/my-history", authMiddleware, requireActivePlan, async (c) => {
   const { tenant_id, user_id } = c.get("auth");
   const db = createDb(c.env.DATABASE_URL);
 
