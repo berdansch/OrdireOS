@@ -92,6 +92,9 @@ Isolamento por `tenant_id` em todas as tabelas operacionais desde o schema. Nenh
 | Sprint 5 | Onboarding em 3 etapas + gestão de usuários UI + nav header owner + fix seamstress 403 | ✅ Concluído |
 | Sprint 6 | Dashboard KPIs + polling falso tempo real + stats da costureira + fluxo de troca de senha no 1º acesso | ✅ Concluído |
 | Sprint 7 | Módulo Payroll: períodos de folha, vales/adiantamentos e fechamento de folha | ✅ Concluído |
+| Sprint 8 | Estabilização de edge cases + histórico de 30 dias da costureira | ✅ Concluído |
+| Sprint 9 | Experiência do supervisor + isolamento de roles (owner não vaza folha) | ✅ Concluído |
+| Sprint 10 | Trial de 14 dias + middleware de plano + painel admin + página de expirado | ✅ Concluído |
 
 ---
 

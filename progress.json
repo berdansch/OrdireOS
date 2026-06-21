@@ -1,121 +1,78 @@
 {
   "project": "OrdireOS",
-  "last_updated": "2026-06-18",
+  "last_updated": "2026-06-22",
   "active_milestone": "done",
   "milestones": [
-    {
-      "id": "M0",
-      "title": "Fundacao do Monorepo",
-      "status": "done",
-      "completed_at": "2026-05-01",
-      "confirmed_by": "Bernardo"
-    },
-    {
-      "id": "M1",
-      "title": "Apps inicializados",
-      "status": "done",
-      "completed_at": "2026-05-01",
-      "confirmed_by": "Bernardo"
-    },
-    {
-      "id": "M2",
-      "title": "Packages placeholder",
-      "status": "done",
-      "completed_at": "2026-05-01",
-      "confirmed_by": "Bernardo"
-    },
-    {
-      "id": "M3",
-      "title": "AGENTS.md + specs.md + Progress Tracker",
-      "status": "done",
-      "completed_at": "2026-05-05",
-      "confirmed_by": "Bernardo"
-    },
-    {
-      "id": "M4",
-      "title": "Banco de dados real",
-      "status": "done",
-      "completed_at": "2026-05-05",
-      "confirmed_by": "Bernardo"
-    },
-    {
-      "id": "M5",
-      "title": "Autenticacao JWT + roles + tenant isolation",
-      "status": "done",
-      "completed_at": "2026-05-10",
-      "confirmed_by": "Bernardo"
-    },
-    {
-      "id": "M6",
-      "title": "Feature core: lancamento de producao",
-      "status": "done",
-      "completed_at": "2026-05-21",
-      "confirmed_by": "Bernardo"
-    },
-    {
-      "id": "M7",
-      "title": "Dashboard do proprietario",
-      "status": "done",
-      "completed_at": "2026-05-23",
-      "confirmed_by": "Bernardo"
-    },
-    {
-      "id": "M8",
-      "title": "Deploy em producao",
-      "status": "done",
-      "completed_at": "2026-06-07",
-      "confirmed_by": "Bernardo"
-    }
+    { "id": "M0", "title": "Fundacao do Monorepo", "status": "done" },
+    { "id": "M1", "title": "Apps inicializados", "status": "done" },
+    { "id": "M2", "title": "Packages placeholder", "status": "done" },
+    { "id": "M3", "title": "AGENTS.md + specs.md + Progress Tracker", "status": "done" },
+    { "id": "M4", "title": "Banco de dados real", "status": "done" },
+    { "id": "M5", "title": "Autenticacao JWT + roles + tenant isolation", "status": "done" },
+    { "id": "M6", "title": "Feature core: lancamento de producao", "status": "done" },
+    { "id": "M7", "title": "Dashboard do proprietario", "status": "done" },
+    { "id": "M8", "title": "Deploy em producao", "status": "done" }
   ],
   "sprints": [
     {
       "id": "Sprint1",
       "title": "CORS dinamico + tipagem end-to-end",
       "status": "done",
-      "completed_at": "2026-05-23",
-      "confirmed_by": "Bernardo"
+      "completed_at": "2026-05-23"
     },
     {
       "id": "Sprint2",
       "title": "Gestao de usuarios + ordens de producao + onboarding de tenant + Tailwind corrigido",
       "status": "done",
-      "completed_at": "2026-06-06",
-      "confirmed_by": "Bernardo"
+      "completed_at": "2026-06-06"
     },
     {
       "id": "Sprint3",
       "title": "Race condition nos layouts + Neon HTTP timestamp fix + price_per_piece migration",
       "status": "done",
-      "completed_at": "2026-06-07",
-      "confirmed_by": "Bernardo"
+      "completed_at": "2026-06-07"
     },
     {
       "id": "Sprint4",
       "title": "Auth client-side em producao: sessionStorage + middleware com cookie de sessao leve",
       "status": "done",
-      "completed_at": "2026-06-07",
-      "confirmed_by": "Bernardo"
+      "completed_at": "2026-06-07"
     },
     {
       "id": "Sprint5",
       "title": "Onboarding em 3 etapas + gestao de usuarios UI + nav header owner + fix seamstress 403",
       "status": "done",
-      "completed_at": "2026-06-07",
-      "confirmed_by": "Bernardo"
+      "completed_at": "2026-06-07"
     },
     {
       "id": "Sprint6",
-      "title": "Dashboard KPIs + polling falso tempo real + stats da costureira (semana + ganho estimado) + fluxo requires_password_change + redirect / para /login",
+      "title": "Dashboard KPIs + polling falso tempo real + stats da costureira + fluxo requires_password_change + redirect / para /login",
       "status": "done",
-      "completed_at": "2026-06-13",
-      "confirmed_by": "Bernardo"
+      "completed_at": "2026-06-13"
     },
     {
       "id": "Sprint7",
       "title": "Modulo Payroll: periodos de folha, vales/adiantamentos, fechamento, guard contra log retroativo em periodo fechado",
       "status": "done",
-      "completed_at": "2026-06-18",
-      "confirmed_by": "Bernardo"
+      "completed_at": "2026-06-18"
+    },
+    {
+      "id": "Sprint8",
+      "title": "Estabilizacao de edge cases (ganho estimado, delta null, costureira zerada na folha) + historico de 30 dias da costureira",
+      "status": "done",
+      "completed_at": "2026-06-20"
+    },
+    {
+      "id": "Sprint9",
+      "title": "Experiencia do supervisor: dashboard proprio, isolamento de roles, owner nao vaza folha de pagamento",
+      "status": "done",
+      "completed_at": "2026-06-20"
+    },
+    {
+      "id": "Sprint10",
+      "title": "Trial de 14 dias: plan + trialEndsAt no schema, middleware requireActivePlan em todas as rotas operacionais, painel admin GET/PATCH /admin/tenants, pagina /expired com CTA WhatsApp, interceptacao trial_expired no apiClient",
+      "status": "done",
+      "completed_at": "2026-06-22"
     }
   ]
 }
