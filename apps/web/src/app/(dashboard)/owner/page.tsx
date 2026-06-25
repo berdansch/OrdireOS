@@ -107,7 +107,7 @@ function KpiCard({
   return (
     <div
       className={`rounded-2xl border shadow-sm p-4 flex flex-col gap-1 ${
-        highlight ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100"
+        highlight ? "bg-indigo-600 border-indigo-700" : "bg-white border-gray-100"
       }`}
     >
       <p className="text-xs font-medium text-gray-400">{label}</p>
@@ -193,14 +193,14 @@ function SummarySection({ summary }: { summary: SummaryData }) {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-bold text-gray-900">{order.completionRate}%</p>
-                    <p className={`text-xs ${order.status === "in_progress" ? "text-blue-500" : "text-gray-400"}`}>
+                    <p className={`text-xs ${order.status === "in_progress" ? "text-indigo-500" : "text-gray-400"}`}>
                       {order.status === "in_progress" ? "em andamento" : "aberta"}
                     </p>
                   </div>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-2">
                   <div
-                    className="bg-gray-900 h-2 rounded-full transition-all"
+                    className="bg-indigo-600 h-2 rounded-full transition-all"
                     style={{ width: `${order.completionRate}%` }}
                   />
                 </div>
@@ -221,7 +221,7 @@ function SummarySection({ summary }: { summary: SummaryData }) {
 
 function StatCard({ label, value, sub, highlight }: { label: string; value: string; sub?: string; highlight?: boolean }) {
   return (
-    <div className={`rounded-2xl border shadow-sm p-4 ${highlight ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100"}`}>
+    <div className={`rounded-2xl border shadow-sm p-4 ${highlight ? "bg-indigo-600 border-indigo-700" : "bg-white border-gray-100"}`}>
       <p className="text-xs font-medium text-gray-400">{label}</p>
       <p className={`text-2xl font-bold mt-1 ${highlight ? "text-white" : "text-gray-900"}`}>{value}</p>
       {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
@@ -389,7 +389,7 @@ function DashboardContent({ data }: { data: DashboardData }) {
                   <p className="text-sm font-bold text-gray-900">{order.completionRate.toFixed(0)}%</p>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-2">
-                  <div className="bg-gray-900 h-2 rounded-full transition-all" style={{ width: `${order.completionRate}%` }} />
+                  <div className="bg-indigo-600 h-2 rounded-full transition-all" style={{ width: `${order.completionRate}%` }} />
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
                   {order.producedPieces.toLocaleString("pt-BR")} de {order.totalPieces.toLocaleString("pt-BR")} pecas
@@ -490,7 +490,7 @@ export default function OwnerDashboardPage() {
               key={p}
               onClick={() => setPeriod(p)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                period === p ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600"
+                period === p ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600"
               }`}
             >
               {PERIOD_LABELS[p]}
@@ -505,7 +505,7 @@ export default function OwnerDashboardPage() {
                 type="date"
                 value={customStart}
                 onChange={(e) => setCustomStart(e.target.value)}
-                className="w-full h-10 px-3 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                className="w-full h-10 px-3 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div className="flex-1">
@@ -514,7 +514,7 @@ export default function OwnerDashboardPage() {
                 type="date"
                 value={customEnd}
                 onChange={(e) => setCustomEnd(e.target.value)}
-                className="w-full h-10 px-3 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                className="w-full h-10 px-3 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <button

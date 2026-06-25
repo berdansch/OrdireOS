@@ -96,16 +96,16 @@ function NewPeriodModal({ onClose, onCreated }: { onClose: () => void; onCreated
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1.5">Data de início</label>
           <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-            className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900" />
+            className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1.5">Data de fim</label>
           <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
-            className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900" />
+            className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         {error && <p className="text-sm text-red-500 bg-red-50 px-4 py-2 rounded-lg">{error}</p>}
         <button onClick={handleSubmit} disabled={submitting || !startDate || !endDate}
-          className="w-full h-11 bg-gray-900 text-white text-sm font-semibold rounded-xl disabled:opacity-50">
+          className="w-full h-11 bg-indigo-600 text-white text-sm font-semibold rounded-xl disabled:opacity-50">
           {submitting ? "Criando..." : "Abrir período"}
         </button>
       </div>
@@ -164,7 +164,7 @@ function AdvanceModal({
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1.5">Colaboradora</label>
           <select value={userId} onChange={(e) => setUserId(e.target.value)}
-            className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900">
+            className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
             {seamstresses.map((u) => (
               <option key={u.id} value={u.id}>{u.name}</option>
             ))}
@@ -175,17 +175,17 @@ function AdvanceModal({
           <input type="number" inputMode="decimal" min="0.01" step="0.01"
             value={amount} onChange={(e) => setAmount(e.target.value)}
             placeholder="0,00"
-            className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900" />
+            className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1.5">Observação <span className="font-normal text-gray-400">(opcional)</span></label>
           <input type="text" value={note} onChange={(e) => setNote(e.target.value)}
             placeholder="Ex: adiantamento quinzenal"
-            className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900" />
+            className="w-full h-11 px-4 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         {error && <p className="text-sm text-red-500 bg-red-50 px-4 py-2 rounded-lg">{error}</p>}
         <button onClick={handleSubmit} disabled={submitting || !userId || !amount}
-          className="w-full h-11 bg-gray-900 text-white text-sm font-semibold rounded-xl disabled:opacity-50">
+          className="w-full h-11 bg-indigo-600 text-white text-sm font-semibold rounded-xl disabled:opacity-50">
           {submitting ? "Salvando..." : "Confirmar vale"}
         </button>
       </div>
@@ -267,7 +267,7 @@ function PeriodDetail({
               {formatDate(period.startDate)} → {formatDate(period.endDate)}
             </p>
             <span className={`inline-block mt-2 text-xs font-semibold px-2.5 py-1 rounded-full ${
-              isOpen ? "bg-blue-50 text-blue-600" : "bg-gray-100 text-gray-500"
+              isOpen ? "bg-indigo-50 text-indigo-600" : "bg-gray-100 text-gray-500"
             }`}>
               {isOpen ? "Aberto" : "Fechado"}
             </span>
@@ -332,7 +332,7 @@ function PeriodDetail({
           </button>
           {closeError && <p className="text-sm text-red-500 bg-red-50 px-4 py-2 rounded-lg text-center">{closeError}</p>}
           <button onClick={handleClose} disabled={closing}
-            className="w-full h-11 bg-gray-900 text-white text-sm font-semibold rounded-xl disabled:opacity-50">
+            className="w-full h-11 bg-indigo-600 text-white text-sm font-semibold rounded-xl disabled:opacity-50">
             {closing ? "Fechando..." : "Fechar folha"}
           </button>
         </div>
@@ -405,7 +405,7 @@ export default function PayrollPage() {
         </div>
         {!hasOpenPeriod && (
           <button onClick={() => setShowNewPeriod(true)}
-            className="h-9 px-4 bg-gray-900 text-white text-sm font-semibold rounded-xl">
+            className="h-9 px-4 bg-indigo-600 text-white text-sm font-semibold rounded-xl">
             + Novo período
           </button>
         )}
@@ -423,7 +423,7 @@ export default function PayrollPage() {
           <p className="text-sm font-medium text-gray-700">Nenhum período criado</p>
           <p className="text-xs text-gray-400 mt-1">Abra um período para começar a calcular a folha.</p>
           <button onClick={() => setShowNewPeriod(true)}
-            className="mt-4 h-10 px-5 bg-gray-900 text-white text-sm font-semibold rounded-xl">
+            className="mt-4 h-10 px-5 bg-indigo-600 text-white text-sm font-semibold rounded-xl">
             Abrir primeiro período
           </button>
         </div>
@@ -437,7 +437,7 @@ export default function PayrollPage() {
                   {formatDate(p.startDate)} → {formatDate(p.endDate)}
                 </p>
                 <span className={`inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                  p.status === "open" ? "bg-blue-50 text-blue-600" : "bg-gray-100 text-gray-500"
+                  p.status === "open" ? "bg-indigo-50 text-indigo-600" : "bg-gray-100 text-gray-500"
                 }`}>
                   {p.status === "open" ? "Aberto" : "Fechado"}
                 </span>

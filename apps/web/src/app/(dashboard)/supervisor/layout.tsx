@@ -40,7 +40,7 @@ export default function SupervisorLayout({ children }: { children: React.ReactNo
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
         <div>
-          <p className="text-xs text-gray-400">OrdireOS</p>
+          <p className="text-xs text-gray-400">Ordire<span className="text-indigo-600">OS</span></p>
           <p className="text-sm font-semibold text-gray-900">{userName ?? "..."}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -50,7 +50,7 @@ export default function SupervisorLayout({ children }: { children: React.ReactNo
               href={item.href}
               className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
                 pathname === item.href
-                  ? "bg-gray-900 text-white border-gray-900"
+                  ? "bg-indigo-600 text-white border-indigo-600"
                   : "border-gray-200 text-gray-600 hover:bg-gray-50"
               }`}
             >
@@ -75,7 +75,7 @@ export default function SupervisorLayout({ children }: { children: React.ReactNo
       <main className="px-4 py-6">
         {ready ? children : (
           <div className="flex items-center justify-center py-20">
-            <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-gray-200 border-t-indigo-600 rounded-full animate-spin" />
           </div>
         )}
       </main>

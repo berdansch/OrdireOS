@@ -58,7 +58,7 @@ function StatsSection({ stats }: { stats: SeamstressStats }) {
         </p>
         <p className="text-xs text-gray-400 mt-0.5">ultimos 7 dias</p>
       </div>
-      <div className={`rounded-2xl border shadow-sm p-4 ${hasEarnings ? "bg-gray-900 border-gray-800" : "bg-white border-gray-100"}`}>
+      <div className={`rounded-2xl border shadow-sm p-4 ${hasEarnings ? "bg-amber-600 border-amber-700" : "bg-white border-gray-100"}`}>
         <p className="text-xs font-medium text-gray-400">Ganho estimado</p>
         <p className={`text-2xl font-bold mt-1 ${hasEarnings ? "text-white" : "text-gray-900"}`}>
           {hasEarnings ? formatCurrency(stats.month.estimatedEarnings) : "—"}
@@ -107,7 +107,7 @@ function LoadingSkeleton() {
 function HistoryTab({ history }: { history: SeamstressHistory | null }) {
   if (!history) return (
     <div className="flex items-center justify-center py-12">
-      <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
+      <div className="w-5 h-5 border-2 border-gray-200 border-t-indigo-600 rounded-full animate-spin" />
     </div>
   );
 
@@ -160,7 +160,7 @@ function HistoryTab({ history }: { history: SeamstressHistory | null }) {
                   </div>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-1.5">
-                  <div className="bg-gray-900 h-1.5 rounded-full transition-all" style={{ width: `${barPct}%` }} />
+                  <div className="bg-indigo-600 h-1.5 rounded-full transition-all" style={{ width: `${barPct}%` }} />
                 </div>
               </div>
             );
@@ -346,7 +346,7 @@ export default function CostureiraPage() {
         {(["registrar", "historico"] as Tab[]).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 h-10 rounded-xl text-sm font-medium transition-colors ${
-              tab === t ? "bg-gray-900 text-white" : "bg-white border border-gray-200 text-gray-600"
+              tab === t ? "bg-indigo-600 text-white" : "bg-white border border-gray-200 text-gray-600"
             }`}>
             {t === "registrar" ? "Registrar" : "Historico"}
           </button>
@@ -372,7 +372,7 @@ export default function CostureiraPage() {
                 Ordem de producao <span className="text-red-400">*</span>
               </label>
               <select value={selectedOrderId} onChange={(e) => { setSelectedOrderId(e.target.value); setError(""); }}
-                className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900">
+                className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="">Selecione...</option>
                 {orders.map((order) => (
                   <option key={order.id} value={order.id}>
@@ -389,7 +389,7 @@ export default function CostureiraPage() {
                 Operacao <span className="text-red-400">*</span>
               </label>
               <select value={selectedOperationId} onChange={(e) => { setSelectedOperationId(e.target.value); setError(""); }}
-                className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-gray-900">
+                className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="">Selecione...</option>
                 {operations.map((op) => (
                   <option key={op.id} value={op.id}>{op.name}</option>
@@ -404,7 +404,7 @@ export default function CostureiraPage() {
               <input type="number" inputMode="numeric" pattern="[0-9]*"
                 value={quantity} onChange={(e) => { setQuantity(e.target.value); setError(""); }}
                 placeholder="0" min="1"
-                className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-900 text-lg font-medium" />
+                className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-lg font-medium" />
             </div>
 
             <div>
@@ -414,7 +414,7 @@ export default function CostureiraPage() {
               <input type="number" inputMode="numeric" pattern="[0-9]*"
                 value={reworkQuantity} onChange={(e) => { setReworkQuantity(e.target.value); setError(""); }}
                 placeholder="0" min="0"
-                className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-900 text-lg font-medium" />
+                className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-lg font-medium" />
             </div>
 
             {error && (
@@ -424,7 +424,7 @@ export default function CostureiraPage() {
             )}
 
             <button onClick={handleSubmit} disabled={submitting}
-              className="w-full h-14 bg-gray-900 text-white font-semibold rounded-xl disabled:opacity-60 active:scale-95 transition-all text-base flex items-center justify-center gap-2">
+              className="w-full h-14 bg-indigo-600 text-white font-semibold rounded-xl disabled:opacity-60 active:scale-95 transition-all text-base flex items-center justify-center gap-2">
               {submitting ? (
                 <><span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Registrando...</>
               ) : "Registrar producao"}
