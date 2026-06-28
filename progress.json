@@ -1,6 +1,6 @@
 {
   "project": "OrdireOS",
-  "last_updated": "2026-06-22",
+  "last_updated": "2026-06-27",
   "active_milestone": "done",
   "milestones": [
     { "id": "M0", "title": "Fundacao do Monorepo", "status": "done" },
@@ -73,6 +73,18 @@
       "title": "Trial de 14 dias: plan + trialEndsAt no schema, middleware requireActivePlan em todas as rotas operacionais, painel admin GET/PATCH /admin/tenants, pagina /expired com CTA WhatsApp, interceptacao trial_expired no apiClient",
       "status": "done",
       "completed_at": "2026-06-22"
+    },
+    {
+      "id": "Sprint11",
+      "title": "UI polish: identidade visual indigo/amber (bg-indigo-600 para CTAs/nav, bg-amber-600 exclusivo para card de ganhos da costureira), badges de status semanticos, wordmark OrdireOS com OS em indigo",
+      "status": "done",
+      "completed_at": "2026-06-25"
+    },
+    {
+      "id": "Sprint12",
+      "title": "Validacao de vendas: DEMO.md com script estruturado de 20 minutos, seed SQL para tenant demo limpo, PROSPECTS.md como template de feedback para conversas com prospects",
+      "status": "in_progress",
+      "started_at": "2026-06-27"
     }
   ]
 }

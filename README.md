@@ -12,7 +12,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=flat-square&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![Hono](https://img.shields.io/badge/Hono-Cloudflare_Workers-E36002?style=flat-square&logo=cloudflare&logoColor=white)](https://hono.dev/)
 [![Drizzle](https://img.shields.io/badge/Drizzle_ORM-PostgreSQL-C5F74F?style=flat-square&logo=postgresql&logoColor=black)](https://orm.drizzle.team/)
-[![Turborepo](https://img.shields.io/badge/Turborepo-Monorepo-EF4444?style=flat-square&logo=turborepo&logoColor=white)](https://turbo.build/)
+[![Turborepo](https://img.shields.io/badge/Turborepo-Monorepo-EF4444?style=flat-square&logo=turborepo&logoColor=white)](https://turbo.build/)]
 
 **🟢 Em produção:** [ordire-os-api.vercel.app](https://ordire-os-api.vercel.app)
 
@@ -95,6 +95,8 @@ Isolamento por `tenant_id` em todas as tabelas operacionais desde o schema. Nenh
 | Sprint 8 | Estabilização de edge cases + histórico de 30 dias da costureira | ✅ Concluído |
 | Sprint 9 | Experiência do supervisor + isolamento de roles (owner não vaza folha) | ✅ Concluído |
 | Sprint 10 | Trial de 14 dias + middleware de plano + painel admin + página de expirado | ✅ Concluído |
+| Sprint 11 | UI polish: identidade visual indigo/amber, badges de status semânticos, wordmark "OrdireOS" | ✅ Concluído |
+| Sprint 12 | Validação de vendas: script de demo estruturado, seed SQL para tenant demo, template de feedback | 🔄 Em andamento |
 
 ---
 
@@ -103,6 +105,8 @@ Isolamento por `tenant_id` em todas as tabelas operacionais desde o schema. Nenh
 **Owner:** cadastra a facção via `/onboarding` → cria operações e OPs → acompanha dashboard em tempo real
 
 **Costureira:** recebe login do owner → acessa `/costureira` → registra produção por turno
+
+**Supervisor:** acessa painel próprio → acompanha produção em tempo real → sem acesso à folha de pagamento
 
 ---
 
@@ -114,6 +118,7 @@ Este projeto é desenvolvido em parceria com **Claude** (Anthropic) como agente 
 - **`CLAUDE.md`** é um symlink para `AGENTS.md`
 - **`specs.md`** concentra toda a especificação técnica e de produto
 - **`progress.json`** é o estado vivo dos milestones, atualizado pelo agente
+- **`DEMO.md`** script estruturado de 20 minutos para demos com prospects
 
 ---
 
