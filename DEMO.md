@@ -114,7 +114,7 @@ VALUES (
   'demo-tenant-001',
   'Maria Supervisora',
   'maria@confeccaodemo.com.br',
-  '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+  '$2b$10$vOsvCT3EQ/6eV0bLYcg40uZJMdKa.kdbvQjdQvkB/UFy6Lp3smdpu',
   'supervisor',
   false,
   NOW()
@@ -127,7 +127,7 @@ VALUES (
   'demo-tenant-001',
   'Ana Costureira',
   'ana@confeccaodemo.com.br',
-  '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+  '$2b$10$vOsvCT3EQ/6eV0bLYcg40uZJMdKa.kdbvQjdQvkB/UFy6Lp3smdpu',
   'seamstress',
   false,
   NOW()
