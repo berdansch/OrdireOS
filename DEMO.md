@@ -101,7 +101,7 @@ VALUES (
   'demo-tenant-001',
   'Dono Demo',
   'demo@confeccaodemo.com.br',
-  '$2a$10$IIVtbqNtAtm8nJ5tXRiPXuOIivMUEPuS5B5q8pSD/VVGXTz.S1FMO',
+  '$2b$10$vOsvCT3EQ/6eV0bLYcg40uZJMdKa.kdbvQjdQvkB/UFy6Lp3smdpu',
   'owner',
   false,
   NOW()
