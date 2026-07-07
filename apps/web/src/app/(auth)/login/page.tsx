@@ -50,7 +50,12 @@ function LoginForm() {
       const data = await res.json() as LoginResponse | PasswordChangeRequired;
 
       if ("requires_password_change" in data && data.requires_password_change) {
-        router.replace(`/change-password?token=${encodeURIComponent(data.temp_token)}`);
+        // Fix de segurança: o temp_token NÃO vai mais na URL (evita
+        // vazamento via histórico do navegador, logs de proxy/CDN e
+        // header Referer). Guardamos em sessionStorage, que morre com a
+        // aba e não é registrado em nenhum log de infraestrutura.
+        sessionStorage.setItem("ordireos_temp_token", data.temp_token);
+        router.replace("/change-password");
         return;
       }
 

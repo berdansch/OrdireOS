@@ -5,16 +5,28 @@ import type { AppContext } from "../index";
 
 export const adminRoutes = new Hono<AppContext>();
 
-// Guard: todas as rotas admin exigem ADMIN_SECRET no header
+// Comparacao em tempo constante — evita timing attack para descobrir o
+// ADMIN_SECRET byte a byte medindo a latencia de respostas 401.
+function timingSafeEqual(a: string, b: string): boolean {
+  const encoder = new TextEncoder();
+  const bufA = encoder.encode(a);
+  const bufB = encoder.encode(b);
+  if (bufA.length !== bufB.length) return false;
+  let result = 0;
+  for (let i = 0; i < bufA.length; i++) {
+    result |= bufA[i] ^ bufB[i];
+  }
+  return result === 0;
+}
+
 adminRoutes.use("*", async (c, next) => {
   const secret = c.req.header("x-admin-secret");
-  if (!secret || secret !== c.env.ADMIN_SECRET) {
+  if (!secret || !timingSafeEqual(secret, c.env.ADMIN_SECRET)) {
     return c.json({ error: "Nao autorizado" }, 401);
   }
   return next();
 });
 
-// GET /admin/tenants — lista todos os tenants
 adminRoutes.get("/tenants", async (c) => {
   const db = createDb(c.env.DATABASE_URL);
   const all = await db
@@ -32,7 +44,6 @@ adminRoutes.get("/tenants", async (c) => {
   return c.json(all);
 });
 
-// PATCH /admin/tenants/:id — atualiza plan do tenant
 adminRoutes.patch("/tenants/:id", async (c) => {
   const id = c.req.param("id");
   const body = await c.req.json<{ plan?: string; trialEndsAt?: string }>();
@@ -51,18 +62,25 @@ adminRoutes.patch("/tenants/:id", async (c) => {
 
   if (!tenant) return c.json({ error: "Tenant nao encontrado" }, 404);
 
-  type UpdatePayload = { plan: string; trialEndsAt?: ReturnType<typeof sql.raw> };
-  const updateData: UpdatePayload = { plan: body.plan };
-
+  // Neon HTTP driver nao aceita objetos Date como bind param — usamos a
+  // string ISO como valor parametrizado (nao sql.raw) dentro do template.
   if (body.trialEndsAt) {
     const parsed = new Date(body.trialEndsAt);
     if (isNaN(parsed.getTime())) return c.json({ error: "trialEndsAt invalido" }, 400);
-    updateData.trialEndsAt = sql.raw(`'${parsed.toISOString()}'::timestamptz`);
+    const parsedIso = parsed.toISOString();
+
+    const [updated] = await db
+      .update(tenants)
+      .set({ plan: body.plan, trialEndsAt: sql`${parsedIso}::timestamptz` })
+      .where(eq(tenants.id, id))
+      .returning();
+
+    return c.json(updated);
   }
 
   const [updated] = await db
     .update(tenants)
-    .set(updateData)
+    .set({ plan: body.plan })
     .where(eq(tenants.id, id))
     .returning();
 

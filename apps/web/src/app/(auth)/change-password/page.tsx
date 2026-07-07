@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter } from "next/navigation";
 import { tokenStore } from "@/lib/auth/token-store";
 
 type ChangePasswordResponse = {
@@ -16,8 +16,18 @@ type ChangePasswordResponse = {
 
 function ChangePasswordForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const tempToken = searchParams.get("token") ?? "";
+
+  // Fix de segurança: antes o token vinha da URL (?token=...), o que o
+  // expunha no histórico do navegador e em logs de infraestrutura. Agora
+  // lemos de sessionStorage, gravado pela página de login.
+  const [tempToken, setTempToken] = useState<string | null>(null);
+  const [checkedStorage, setCheckedStorage] = useState(false);
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem("ordireos_temp_token");
+    setTempToken(stored);
+    setCheckedStorage(true);
+  }, []);
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,6 +37,10 @@ function ChangePasswordForm() {
   async function handleSubmit() {
     setError("");
 
+    if (!tempToken) {
+      setError("Sessão expirada. Faça login novamente.");
+      return;
+    }
     if (newPassword.length < 6) {
       setError("Senha deve ter pelo menos 6 caracteres");
       return;
@@ -57,6 +71,7 @@ function ChangePasswordForm() {
       }
 
       const data = await res.json() as ChangePasswordResponse;
+      sessionStorage.removeItem("ordireos_temp_token");
       tokenStore.setAuth(data.access_token, data.user);
 
       const roleRedirect: Record<string, string> = {
@@ -73,12 +88,12 @@ function ChangePasswordForm() {
     }
   }
 
-  if (!tempToken) {
+  if (checkedStorage && !tempToken) {
     return (
       <main>
         <div>
           <p className="text-sm text-red-500 bg-red-50 px-4 py-2 rounded-lg">
-            Link inválido. Faça login novamente.
+            Link inválido ou sessão expirada. Faça login novamente.
           </p>
         </div>
       </main>

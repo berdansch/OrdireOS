@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { createDb, users } from "@ordireos/db";
+import { createDb, users, revokedTokens } from "@ordireos/db";
 import { signAccessToken, signRefreshToken, signTempToken, verifyToken, type RefreshTokenPayload, type TempTokenPayload } from "../lib/jwt";
 import type { AppContext } from "../index";
 
@@ -22,8 +22,20 @@ authRoutes.post("/login", async (c) => {
   if (!body.email || typeof body.email !== "string") return c.json({ error: "Email invalido" }, 400);
   if (!body.password || typeof body.password !== "string") return c.json({ error: "Senha obrigatoria" }, 400);
 
+  const normalizedEmail = body.email.toLowerCase().trim();
+
+  // Rate limit: por IP + email combinados. 5 tentativas por 60s.
+  // Combinar os dois evita que um IP bloqueie o login legitimo de outra
+  // conta, e evita que um atacante distribua tentativas so trocando de IP.
+  const ip = c.req.header("cf-connecting-ip") ?? "unknown";
+  const rateLimitKey = `login:${ip}:${normalizedEmail}`;
+  const { success } = await c.env.LOGIN_RATE_LIMITER.limit({ key: rateLimitKey });
+  if (!success) {
+    return c.json({ error: "Muitas tentativas de login. Aguarde um minuto e tente novamente." }, 429);
+  }
+
   const db = createDb(c.env.DATABASE_URL);
-  const [user] = await db.select().from(users).where(eq(users.email, body.email.toLowerCase().trim())).limit(1);
+  const [user] = await db.select().from(users).where(eq(users.email, normalizedEmail)).limit(1);
 
   if (!user || !user.active) return c.json({ error: "Credenciais invalidas" }, 401);
 
@@ -81,6 +93,15 @@ authRoutes.post("/refresh", async (c) => {
   if (!payload) return c.json({ error: "Refresh token invalido ou expirado" }, 401);
 
   const db = createDb(c.env.DATABASE_URL);
+
+  // Token revogado (logout anterior) nao pode ser usado para gerar novo access token
+  const [revoked] = await db
+    .select({ id: revokedTokens.id })
+    .from(revokedTokens)
+    .where(eq(revokedTokens.jti, payload.jti))
+    .limit(1);
+  if (revoked) return c.json({ error: "Sessao encerrada. Faca login novamente." }, 401);
+
   const [user] = await db.select().from(users).where(eq(users.id, payload.user_id)).limit(1);
   if (!user || !user.active) return c.json({ error: "Usuario nao encontrado ou inativo" }, 401);
 
@@ -89,6 +110,28 @@ authRoutes.post("/refresh", async (c) => {
 });
 
 authRoutes.post("/logout", async (c) => {
+  const refreshToken = getCookie(c, REFRESH_COOKIE);
+
+  if (refreshToken) {
+    const payload = await verifyToken<RefreshTokenPayload>(refreshToken, c.env.JWT_REFRESH_SECRET);
+    if (payload) {
+      // Revoga o refresh token: registra o jti ate a data de expiracao original (7 dias).
+      // Best-effort — se a escrita falhar, o logout no cliente ainda deve funcionar.
+      try {
+        const db = createDb(c.env.DATABASE_URL);
+        // Neon HTTP driver nao aceita Date objects como bind param —
+        // usamos sql`${string}::timestamptz` (parametrizado, nao sql.raw).
+        const expiresAtIso = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        await db.insert(revokedTokens).values({
+          jti: payload.jti,
+          expiresAt: sql`${expiresAtIso}::timestamptz`,
+        }).onConflictDoNothing();
+      } catch (err) {
+        console.error("[LOGOUT] Falha ao revogar refresh token:", err);
+      }
+    }
+  }
+
   deleteCookie(c, REFRESH_COOKIE, { path: "/" });
   return c.json({ success: true });
 });

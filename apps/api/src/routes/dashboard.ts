@@ -17,9 +17,17 @@ dashboardRoutes.get("/", authMiddleware, requireActivePlan, requireRole(["owner"
     return c.json({ error: "Parametros start e end sao obrigatorios" }, 400);
   }
 
-  // Neon HTTP driver nao aceita Date objects como bind params — usar sql.raw com ISO strings validadas
-  const safeStart = new Date(startStr).toISOString();
-  const safeEnd = new Date(endStr).toISOString();
+  // start/end vem da query string (controlado pelo cliente). Validamos
+  // explicitamente antes de usar — evita 500 genérico e deixa claro que
+  // input invalido nunca chega a virar SQL.
+  let safeStart: string;
+  let safeEnd: string;
+  try {
+    safeStart = new Date(startStr).toISOString();
+    safeEnd = new Date(endStr).toISOString();
+  } catch {
+    return c.json({ error: "Parametros start e end devem ser datas validas" }, 400);
+  }
 
   const db = createDb(c.env.DATABASE_URL);
 
@@ -46,8 +54,8 @@ dashboardRoutes.get("/", authMiddleware, requireActivePlan, requireRole(["owner"
     .innerJoin(productionOrders, eq(productionLogs.productionOrderId, productionOrders.id))
     .where(and(
       eq(productionLogs.tenantId, tenant_id),
-      sql`${productionLogs.loggedAt} >= ${sql.raw("'" + safeStart + "'")}::timestamptz`,
-      sql`${productionLogs.loggedAt} <= ${sql.raw("'" + safeEnd + "'")}::timestamptz`,
+      sql`${productionLogs.loggedAt} >= ${safeStart}::timestamptz`,
+      sql`${productionLogs.loggedAt} <= ${safeEnd}::timestamptz`,
     ));
 
   const totalPieces = logs.reduce((acc, l) => acc + l.quantity, 0);

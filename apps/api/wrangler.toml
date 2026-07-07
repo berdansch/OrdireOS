@@ -5,3 +5,12 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 ENVIRONMENT = "production"
+
+# Rate limiting nativo do Cloudflare Workers (binding GA).
+# Protege POST /auth/login contra brute force: 5 tentativas a cada 60s
+# por chave (IP + email). Nao precisa de KV nem infra extra — o proprio
+# binding gerencia os contadores no edge.
+[[ratelimits]]
+name = "LOGIN_RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 5, period = 60 }

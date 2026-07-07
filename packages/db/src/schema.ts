@@ -126,3 +126,10 @@ export const advancesRelations = relations(advances, ({ one }) => ({
   period: one(payrollPeriods, { fields: [advances.periodId], references: [payrollPeriods.id] }),
   user: one(users, { fields: [advances.userId], references: [users.id] }),
 }));
+
+export const revokedTokens = pgTable("revoked_tokens", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  jti: text("jti").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});

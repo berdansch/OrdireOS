@@ -33,7 +33,6 @@ payrollRoutes.post("/periods", authMiddleware, requireActivePlan, requireRole(["
 
   const db = createDb(c.env.DATABASE_URL);
 
-  // Bloquear se já existe período aberto
   const [existing] = await db
     .select({ id: payrollPeriods.id })
     .from(payrollPeriods)
@@ -69,7 +68,6 @@ payrollRoutes.get("/periods/:id", authMiddleware, requireActivePlan, requireRole
 
   if (!period) return c.json({ error: "Periodo nao encontrado" }, 404);
 
-  // Logs do período com pricePerPiece e nome da costureira
   const logs = await db
     .select({
       userId: productionLogs.userId,
@@ -89,7 +87,6 @@ payrollRoutes.get("/periods/:id", authMiddleware, requireActivePlan, requireRole
       )
     );
 
-  // Todas as costureiras ativas do tenant — para exibir zeradas se não tiverem logs
   const allSeamstresses = await db
     .select({ id: users.id, name: users.name })
     .from(users)
@@ -101,7 +98,6 @@ payrollRoutes.get("/periods/:id", authMiddleware, requireActivePlan, requireRole
       )
     );
 
-  // Vales do período
   const periodAdvances = await db
     .select({
       id: advances.id,
@@ -120,7 +116,6 @@ payrollRoutes.get("/periods/:id", authMiddleware, requireActivePlan, requireRole
       )
     );
 
-  // Agregar por costureira
   const seamstressMap = new Map<string, {
     userId: string;
     userName: string;
@@ -130,7 +125,6 @@ payrollRoutes.get("/periods/:id", authMiddleware, requireActivePlan, requireRole
     netEarnings: number;
   }>();
 
-  // Inicializar todas as costureiras com zero — garante que aparecem mesmo sem logs
   for (const s of allSeamstresses) {
     if (!seamstressMap.has(s.id)) {
       seamstressMap.set(s.id, {
@@ -205,14 +199,13 @@ payrollRoutes.post("/periods/:id/close", authMiddleware, requireActivePlan, requ
   if (!period) return c.json({ error: "Periodo nao encontrado" }, 404);
   if (period.status === "closed") return c.json({ error: "Periodo ja esta fechado" }, 409);
 
-  const now = new Date();
-  const closedAtRaw = now.toISOString();
+  const closedAtIso = new Date().toISOString();
 
   const [updated] = await db
     .update(payrollPeriods)
     .set({
       status: "closed",
-      closedAt: sql.raw(`'${closedAtRaw}'::timestamptz`),
+      closedAt: sql`${closedAtIso}::timestamptz`,
     })
     .where(eq(payrollPeriods.id, periodId))
     .returning();
@@ -239,6 +232,15 @@ payrollRoutes.post("/periods/:id/advances", authMiddleware, requireActivePlan, r
 
   if (!period) return c.json({ error: "Periodo nao encontrado" }, 404);
   if (period.status === "closed") return c.json({ error: "Nao e possivel registrar vale em periodo fechado" }, 409);
+
+  // IDOR fix: userId vem do body. Sem esta checagem, o owner de um tenant
+  // poderia registrar um vale para um usuario de OUTRO tenant.
+  const [targetUser] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(eq(users.id, body.userId), eq(users.tenantId, tenant_id)))
+    .limit(1);
+  if (!targetUser) return c.json({ error: "Usuario nao encontrado" }, 404);
 
   const amountStr = body.amount.toFixed(2);
 

@@ -57,7 +57,10 @@ productionLogsRoutes.get("/my-stats", authMiddleware, requireActivePlan, async (
   const weekStart = new Date(todayStart.getTime() - 6 * 24 * 60 * 60 * 1000);
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 3, 0, 0, 0));
 
-  const fmt = (d: Date) => "'" + d.toISOString() + "'";
+  // Datas geradas internamente (nao vem do usuario) — bind parametrizado,
+  // sem sql.raw. Elimina o padrao de interpolacao de string em SQL.
+  const weekStartIso = weekStart.toISOString();
+  const monthStartIso = monthStart.toISOString();
 
   const weekLogs = await db
     .select({ quantity: productionLogs.quantity })
@@ -66,7 +69,7 @@ productionLogsRoutes.get("/my-stats", authMiddleware, requireActivePlan, async (
       and(
         eq(productionLogs.tenantId, tenant_id),
         eq(productionLogs.userId, user_id),
-        sql`${productionLogs.loggedAt} >= ${sql.raw(fmt(weekStart))}::timestamptz`,
+        sql`${productionLogs.loggedAt} >= ${weekStartIso}::timestamptz`,
       )
     );
 
@@ -83,7 +86,7 @@ productionLogsRoutes.get("/my-stats", authMiddleware, requireActivePlan, async (
       and(
         eq(productionLogs.tenantId, tenant_id),
         eq(productionLogs.userId, user_id),
-        sql`${productionLogs.loggedAt} >= ${sql.raw(fmt(monthStart))}::timestamptz`,
+        sql`${productionLogs.loggedAt} >= ${monthStartIso}::timestamptz`,
       )
     );
 
@@ -116,8 +119,25 @@ productionLogsRoutes.post("/", authMiddleware, requireActivePlan, async (c) => {
 
   const db = createDb(c.env.DATABASE_URL);
 
+  // IDOR fix: productionOrderId e operationId vem do body (controlado pelo
+  // cliente). Sem esta checagem, um usuario autenticado poderia registrar
+  // producao apontando para uma OP ou operacao de OUTRO tenant — violando
+  // a regra inviolavel de isolamento multi-tenant do OrdireOS.
+  const [order] = await db
+    .select({ id: productionOrders.id })
+    .from(productionOrders)
+    .where(and(eq(productionOrders.id, body.productionOrderId), eq(productionOrders.tenantId, tenant_id)))
+    .limit(1);
+  if (!order) return c.json({ error: "Ordem de producao nao encontrada" }, 404);
+
+  const [operation] = await db
+    .select({ id: operations.id })
+    .from(operations)
+    .where(and(eq(operations.id, body.operationId), eq(operations.tenantId, tenant_id)))
+    .limit(1);
+  if (!operation) return c.json({ error: "Operacao nao encontrada" }, 404);
+
   // Guard: rejeitar log retroativo em período fechado
-  // loggedAt será defaultNow() — usamos a data de hoje no formato YYYY-MM-DD
   const today = new Date().toISOString().slice(0, 10);
   const closedPeriod = await db
     .select({ id: payrollPeriods.id })
@@ -156,7 +176,7 @@ productionLogsRoutes.get("/my-history", authMiddleware, requireActivePlan, async
 
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const fmt = (d: Date) => "'" + d.toISOString() + "'";
+  const thirtyDaysAgoIso = thirtyDaysAgo.toISOString();
 
   const rows = await db
     .select({
@@ -171,7 +191,7 @@ productionLogsRoutes.get("/my-history", authMiddleware, requireActivePlan, async
       and(
         eq(productionLogs.tenantId, tenant_id),
         eq(productionLogs.userId, user_id),
-        sql`${productionLogs.loggedAt} >= ${sql.raw(fmt(thirtyDaysAgo))}::timestamptz`,
+        sql`${productionLogs.loggedAt} >= ${thirtyDaysAgoIso}::timestamptz`,
       )
     )
     .orderBy(productionLogs.loggedAt);
@@ -181,7 +201,6 @@ productionLogsRoutes.get("/my-history", authMiddleware, requireActivePlan, async
 
   for (const row of rows) {
     const date = new Date(row.loggedAt);
-    // Ajuste BRT: subtrai 3h para converter UTC → BRT
     const brtDate = new Date(date.getTime() - 3 * 60 * 60 * 1000);
     const day = brtDate.toISOString().slice(0, 10);
 
@@ -193,7 +212,6 @@ productionLogsRoutes.get("/my-history", authMiddleware, requireActivePlan, async
     dayMap.set(day, existing);
   }
 
-  // Ordenar do mais recente para o mais antigo
   const days = Array.from(dayMap.entries())
     .map(([date, data]) => ({
       date,
