@@ -8,6 +8,126 @@ import { requireActivePlan } from "../middleware/requireActivePlan";
 
 export const dashboardRoutes = new Hono<AppContext>();
 
+// GET /dashboard/summary — KPIs leves para o topo do painel do owner e do
+// supervisor (polling a cada 60s). Endpoint que faltava por completo no
+// backend — era a causa raiz do "Nao foi possivel carregar os dados" no
+// owner e no supervisor.
+dashboardRoutes.get("/summary", authMiddleware, requireActivePlan, requireRole(["owner", "supervisor"]), async (c) => {
+  const { tenant_id } = c.get("auth");
+  const db = createDb(c.env.DATABASE_URL);
+
+  // Limite do dia em 00:00 BRT (03:00 UTC) — mesmo padrao usado em
+  // production-logs.ts (/my-stats) para consistencia entre telas.
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setUTCHours(3, 0, 0, 0);
+  if (now.getTime() < todayStart.getTime()) {
+    todayStart.setUTCDate(todayStart.getUTCDate() - 1);
+  }
+  const weekStart = new Date(todayStart.getTime() - 6 * 24 * 60 * 60 * 1000);
+  const prevWeekStart = new Date(weekStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  const todayStartIso = todayStart.toISOString();
+  const weekStartIso = weekStart.toISOString();
+  const prevWeekStartIso = prevWeekStart.toISOString();
+
+  // Peças de hoje
+  const todayLogs = await db
+    .select({ quantity: productionLogs.quantity })
+    .from(productionLogs)
+    .where(
+      and(
+        eq(productionLogs.tenantId, tenant_id),
+        sql`${productionLogs.loggedAt} >= ${todayStartIso}::timestamptz`,
+      )
+    );
+  const todayPieces = todayLogs.reduce((sum, r) => sum + r.quantity, 0);
+
+  // Peças da semana corrente (janela rolante de 7 dias, incluindo hoje)
+  const weekLogsRaw = await db
+    .select({ quantity: productionLogs.quantity, userId: productionLogs.userId, userName: users.name })
+    .from(productionLogs)
+    .innerJoin(users, eq(productionLogs.userId, users.id))
+    .where(
+      and(
+        eq(productionLogs.tenantId, tenant_id),
+        sql`${productionLogs.loggedAt} >= ${weekStartIso}::timestamptz`,
+      )
+    );
+  const weekPieces = weekLogsRaw.reduce((sum, r) => sum + r.quantity, 0);
+
+  // Peças da semana anterior (mesma janela, 7 dias antes) — para o delta %
+  const prevWeekLogs = await db
+    .select({ quantity: productionLogs.quantity })
+    .from(productionLogs)
+    .where(
+      and(
+        eq(productionLogs.tenantId, tenant_id),
+        sql`${productionLogs.loggedAt} >= ${prevWeekStartIso}::timestamptz`,
+        sql`${productionLogs.loggedAt} < ${weekStartIso}::timestamptz`,
+      )
+    );
+  const prevWeekPieces = prevWeekLogs.reduce((sum, r) => sum + r.quantity, 0);
+
+  const deltaPercent = prevWeekPieces > 0
+    ? Math.round(((weekPieces - prevWeekPieces) / prevWeekPieces) * 1000) / 10
+    : null;
+
+  // Ranking da semana por costureira
+  const rankingMap = new Map<string, { userId: string; userName: string; quantity: number }>();
+  for (const log of weekLogsRaw) {
+    const existing = rankingMap.get(log.userId) ?? { userId: log.userId, userName: log.userName, quantity: 0 };
+    existing.quantity += log.quantity;
+    rankingMap.set(log.userId, existing);
+  }
+  const ranking = Array.from(rankingMap.values()).sort((a, b) => b.quantity - a.quantity);
+
+  // OPs em andamento com progresso
+  const openOrdersList = await db
+    .select()
+    .from(productionOrders)
+    .where(and(
+      eq(productionOrders.tenantId, tenant_id),
+      sql`${productionOrders.status} = 'in_progress'`
+    ));
+
+  const openOrders = await Promise.all(
+    openOrdersList.map(async (order) => {
+      const orderLogs = await db
+        .select({ quantity: productionLogs.quantity })
+        .from(productionLogs)
+        .where(and(
+          eq(productionLogs.productionOrderId, order.id),
+          eq(productionLogs.tenantId, tenant_id)
+        ));
+
+      const producedPieces = orderLogs.reduce((acc, l) => acc + l.quantity, 0);
+      const completionRate = order.totalPieces > 0
+        ? Math.min((producedPieces / order.totalPieces) * 100, 100)
+        : 0;
+
+      return {
+        orderId: order.id,
+        reference: order.reference,
+        clientName: order.clientName,
+        totalPieces: order.totalPieces,
+        producedPieces,
+        completionRate,
+        status: order.status,
+      };
+    })
+  );
+
+  return c.json({
+    today: { pieces: todayPieces },
+    week: { pieces: weekPieces, prevWeekPieces, deltaPercent },
+    ranking,
+    openOrders,
+  });
+});
+
+// GET /dashboard — detalhamento por período (start/end), usado na tela
+// completa do owner (não no polling leve do /summary)
 dashboardRoutes.get("/", authMiddleware, requireActivePlan, requireRole(["owner", "supervisor"]), async (c) => {
   const { tenant_id } = c.get("auth");
   const startStr = c.req.query("start");
@@ -17,9 +137,6 @@ dashboardRoutes.get("/", authMiddleware, requireActivePlan, requireRole(["owner"
     return c.json({ error: "Parametros start e end sao obrigatorios" }, 400);
   }
 
-  // start/end vem da query string (controlado pelo cliente). Validamos
-  // explicitamente antes de usar — evita 500 genérico e deixa claro que
-  // input invalido nunca chega a virar SQL.
   let safeStart: string;
   let safeEnd: string;
   try {
