@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import bcrypt from "bcryptjs";
+import { sql } from "drizzle-orm";
 import { createDb, tenants, users } from "@ordireos/db";
 import { eq } from "drizzle-orm";
 import type { AppContext } from "../index";
@@ -46,11 +47,12 @@ onboardingRoutes.post("/register", async (c) => {
     .limit(1);
   if (existingSlug) return c.json({ error: "Este identificador ja esta em uso. Escolha outro." }, 409);
 
-  // Criar tenant com trial de 14 dias
-  const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-  const trialEndsAtRaw = trialEndsAt.toISOString();
-
-  const { sql } = await import("drizzle-orm");
+  // Criar tenant com trial de 14 dias.
+  // Fix: o codigo anterior tinha um bug de sintaxe (crases escapadas
+  // literalmente) que quebrava o build — este endpoint nunca chegou a
+  // rodar de fato. Alem disso, trocamos sql.raw por bind parametrizado
+  // (mesma string ISO, sem interpolacao manual).
+  const trialEndsAtIso = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
 
   const [newTenant] = await db
     .insert(tenants)
@@ -58,7 +60,7 @@ onboardingRoutes.post("/register", async (c) => {
       name: body.tenantName.trim(),
       slug: body.tenantSlug,
       plan: "trial",
-      trialEndsAt: sql.raw(\`'\${trialEndsAtRaw}'::timestamptz\`),
+      trialEndsAt: sql`${trialEndsAtIso}::timestamptz`,
     })
     .returning({ id: tenants.id });
 
