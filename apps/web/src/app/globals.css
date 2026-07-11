@@ -1,1 +1,85 @@
 @import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────────────────
+   OrdireOS — Sistema de Tokens
+   Cor e tipografia derivadas do ofício têxtil, não do "indigo genérico de
+   SaaS". Ver blueprint da Fase 1 para a justificativa de cada escolha.
+   ───────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Cor */
+  --color-anil: #2d3b7a;         /* azul-tear — cor primária */
+  --color-anil-escuro: #1f2a5c;  /* hover/active de elementos anil */
+  --color-cru: #f7f4ee;          /* fundo — algodão cru */
+  --color-carvao: #1c1b1a;       /* texto — preto quente */
+  --color-novelo: #c17817;       /* acento — linha/novelo (ganhos, destaque) */
+  --color-retalho: #b23a34;      /* erro / retrabalho */
+  --color-linha-verde: #4c7a5e;  /* sucesso / conclusão */
+
+  /* Tipografia — três papéis, nenhum decorativo */
+  --font-display: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-data), ui-monospace, "SFMono-Regular", monospace;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Fundações de acessibilidade e mobile
+   Aplicadas globalmente agora para que toda tela nova já nasça em
+   conformidade, sem precisar lembrar disso componente por componente.
+   ───────────────────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    color-scheme: light;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--color-cru);
+    color: var(--color-carvao);
+    overflow-x: hidden;
+  }
+
+  /* Foco visível consistente — nunca outline-none sem substituto.
+     Componentes específicos podem sobrescrever com focus-visible:ring-*
+     quando precisarem de algo mais elaborado (ex: inputs, botões primários). */
+  :focus-visible {
+    outline: 2px solid var(--color-anil);
+    outline-offset: 2px;
+  }
+
+  /* Alvo de toque consistente em elementos interativos — evita o atraso de
+     300ms do double-tap-zoom em Android, relevante para uso no celular. */
+  button,
+  a {
+    touch-action: manipulation;
+  }
+
+  /* Números tabulares por padrão em qualquer contagem/valor monetário —
+     evita "dança" de dígitos em KPIs que atualizam via polling. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  /* Safe-area para headers/rodapés full-bleed no celular (notch/gesture bar) */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Respeita prefers-reduced-motion globalmente — nenhuma animação futura
+   (incluindo o WarpProgress da Fase 2) precisa lembrar de checar isso. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
