@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { apiClient } from "@/lib/auth/api-client";
+import { WarpProgress } from "@/components/WarpProgress";
 
 type Period = "today" | "week" | "month" | "custom";
 
@@ -192,18 +193,17 @@ function SummarySection({ summary }: { summary: SummaryData }) {
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-gray-900">{order.completionRate}%</p>
-                    <p className={`text-xs ${order.status === "in_progress" ? "text-indigo-500" : "text-gray-400"}`}>
+                    <p className="text-sm font-bold text-gray-900 tabular">{order.completionRate}%</p>
+                    <p className={`text-xs ${order.status === "in_progress" ? "text-anil" : "text-gray-400"}`}>
                       {order.status === "in_progress" ? "em andamento" : "aberta"}
                     </p>
                   </div>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-2">
-                  <div
-                    className="bg-indigo-600 h-2 rounded-full transition-all"
-                    style={{ width: `${order.completionRate}%` }}
-                  />
-                </div>
+                <WarpProgress
+                  value={order.completionRate}
+                  label={`Progresso de ${order.reference}`}
+                  size="sm"
+                />
                 <p className="text-xs text-gray-400 mt-1">
                   {order.producedPieces.toLocaleString("pt-BR")} de{" "}
                   {order.totalPieces.toLocaleString("pt-BR")} pecas
@@ -286,9 +286,9 @@ function DashboardContent({ data }: { data: DashboardData }) {
           <p className="text-sm text-gray-400 text-center py-2">Sem dados no periodo.</p>
         ) : (
           <>
-            <ShiftBar label="Manha" value={data.byShift.morning} total={totalShift} color="bg-yellow-400" />
-            <ShiftBar label="Tarde" value={data.byShift.afternoon} total={totalShift} color="bg-blue-400" />
-            <ShiftBar label="Noite" value={data.byShift.night} total={totalShift} color="bg-indigo-500" />
+            <ShiftBar label="Manha" value={data.byShift.morning} total={totalShift} color="bg-novelo" />
+            <ShiftBar label="Tarde" value={data.byShift.afternoon} total={totalShift} color="bg-anil" />
+            <ShiftBar label="Noite" value={data.byShift.night} total={totalShift} color="bg-anil-escuro" />
           </>
         )}
       </div>
@@ -386,11 +386,13 @@ function DashboardContent({ data }: { data: DashboardData }) {
                     <p className="text-sm font-medium text-gray-900">{order.reference}</p>
                     {order.clientName && <p className="text-xs text-gray-400">{order.clientName}</p>}
                   </div>
-                  <p className="text-sm font-bold text-gray-900">{order.completionRate.toFixed(0)}%</p>
+                  <p className="text-sm font-bold text-gray-900 tabular">{order.completionRate.toFixed(0)}%</p>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-2">
-                  <div className="bg-indigo-600 h-2 rounded-full transition-all" style={{ width: `${order.completionRate}%` }} />
-                </div>
+                <WarpProgress
+                  value={order.completionRate}
+                  label={`Progresso de ${order.reference}`}
+                  size="md"
+                />
                 <p className="text-xs text-gray-400 mt-1">
                   {order.producedPieces.toLocaleString("pt-BR")} de {order.totalPieces.toLocaleString("pt-BR")} pecas
                 </p>

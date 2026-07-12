@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { apiClient } from "@/lib/auth/api-client";
+import { WarpProgress } from "@/components/WarpProgress";
 
 type SummaryData = {
   today: { pieces: number };
@@ -145,15 +146,17 @@ export default function SupervisorPage() {
                         {order.clientName && <p className="text-xs text-gray-400">{order.clientName}</p>}
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold text-gray-900">{order.completionRate}%</p>
-                        <p className={`text-xs ${order.status === "in_progress" ? "text-blue-500" : "text-gray-400"}`}>
+                        <p className="text-sm font-bold text-gray-900 tabular">{order.completionRate}%</p>
+                        <p className={`text-xs ${order.status === "in_progress" ? "text-anil" : "text-gray-400"}`}>
                           {order.status === "in_progress" ? "em andamento" : "aberta"}
                         </p>
                       </div>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2">
-                      <div className="bg-gray-900 h-2 rounded-full transition-all" style={{ width: `${order.completionRate}%` }} />
-                    </div>
+                    <WarpProgress
+                      value={order.completionRate}
+                      label={`Progresso de ${order.reference}`}
+                      size="sm"
+                    />
                     <p className="text-xs text-gray-400 mt-1">
                       {order.producedPieces.toLocaleString("pt-BR")} de {order.totalPieces.toLocaleString("pt-BR")} pecas
                     </p>
