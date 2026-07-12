@@ -50,10 +50,6 @@ function LoginForm() {
       const data = await res.json() as LoginResponse | PasswordChangeRequired;
 
       if ("requires_password_change" in data && data.requires_password_change) {
-        // Fix de segurança: o temp_token NÃO vai mais na URL (evita
-        // vazamento via histórico do navegador, logs de proxy/CDN e
-        // header Referer). Guardamos em sessionStorage, que morre com a
-        // aba e não é registrado em nenhum log de infraestrutura.
         sessionStorage.setItem("ordireos_temp_token", data.temp_token);
         router.replace("/change-password");
         return;
@@ -77,44 +73,69 @@ function LoginForm() {
   }
 
   return (
-    <main>
-      <div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-          />
+    <main className="min-h-screen flex items-center justify-center bg-cru px-5 pt-safe pb-safe">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <p className="font-display text-2xl font-bold text-carvao">
+            Ordire<span className="text-anil">OS</span>
+          </p>
+          <h1 className="text-sm text-carvao/60 mt-1">Entre com sua conta</h1>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="........"
-            className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900"
-            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-          />
+
+        <div className="bg-white rounded-2xl border border-carvao/10 shadow-sm p-6 space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-carvao mb-1">
+              Email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              inputMode="email"
+              className="w-full h-12 px-4 border border-carvao/15 rounded-xl text-carvao placeholder-carvao/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-anil focus-visible:border-anil transition-colors"
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-carvao mb-1">
+              Senha
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              placeholder="••••••••"
+              className="w-full h-12 px-4 border border-carvao/15 rounded-xl text-carvao placeholder-carvao/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-anil focus-visible:border-anil transition-colors"
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+            />
+          </div>
+
+          {error && (
+            <p role="alert" aria-live="polite" className="text-sm text-retalho bg-retalho/10 px-4 py-2 rounded-lg">
+              {error}
+            </p>
+          )}
+
+          <button
+            onClick={handleLogin}
+            disabled={loading || !email || !password}
+            className="w-full h-12 bg-anil text-white font-medium rounded-xl disabled:opacity-50 active:scale-[0.98] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-anil-escuro focus-visible:ring-offset-2"
+          >
+            {loading ? "Entrando…" : "Entrar"}
+          </button>
+
+          <p className="text-xs text-center text-carvao/50 pt-1">
+            Não tem conta?{" "}
+            <a href="/onboarding" className="text-anil font-medium underline underline-offset-2">
+              Cadastrar facção
+            </a>
+          </p>
         </div>
-        {error && (
-          <p className="text-sm text-red-500 bg-red-50 px-4 py-2 rounded-lg">{error}</p>
-        )}
-        <button
-          onClick={handleLogin}
-          disabled={loading || !email || !password}
-          className="w-full h-12 bg-gray-900 text-white font-medium rounded-xl disabled:opacity-50 active:scale-95 transition-transform"
-        >
-          {loading ? "Entrando..." : "Entrar"}
-        </button>
-        <p className="text-xs text-center text-gray-400 mt-2">
-          Não tem conta?{" "}
-          <a href="/onboarding" className="text-gray-900 font-medium underline">
-            Cadastrar facção
-          </a>
-        </p>
       </div>
     </main>
   );

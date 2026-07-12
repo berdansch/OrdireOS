@@ -17,9 +17,6 @@ type ChangePasswordResponse = {
 function ChangePasswordForm() {
   const router = useRouter();
 
-  // Fix de segurança: antes o token vinha da URL (?token=...), o que o
-  // expunha no histórico do navegador e em logs de infraestrutura. Agora
-  // lemos de sessionStorage, gravado pela página de login.
   const [tempToken, setTempToken] = useState<string | null>(null);
   const [checkedStorage, setCheckedStorage] = useState(false);
 
@@ -90,56 +87,82 @@ function ChangePasswordForm() {
 
   if (checkedStorage && !tempToken) {
     return (
-      <main>
-        <div>
-          <p className="text-sm text-red-500 bg-red-50 px-4 py-2 rounded-lg">
+      <main className="min-h-screen flex items-center justify-center bg-cru px-5 pt-safe pb-safe">
+        <div className="w-full max-w-sm bg-white rounded-2xl border border-carvao/10 shadow-sm p-6">
+          <p role="alert" aria-live="polite" className="text-sm text-retalho bg-retalho/10 px-4 py-2 rounded-lg">
             Link inválido ou sessão expirada. Faça login novamente.
           </p>
+          <a href="/login" className="block text-center text-sm text-anil font-medium underline underline-offset-2 mt-4">
+            Voltar ao login
+          </a>
         </div>
       </main>
     );
   }
 
   return (
-    <main>
-      <div>
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">Crie sua senha</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Você está acessando pela primeira vez. Defina uma senha pessoal para continuar.
+    <main className="min-h-screen flex items-center justify-center bg-cru px-5 pt-safe pb-safe">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <p className="font-display text-2xl font-bold text-carvao">
+            Ordire<span className="text-anil">OS</span>
           </p>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nova senha</label>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="Mínimo 6 caracteres"
-            className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900"
-          />
+
+        <div className="bg-white rounded-2xl border border-carvao/10 shadow-sm p-6 space-y-4">
+          <div>
+            <h1 className="text-lg font-semibold text-carvao">Crie sua senha</h1>
+            <p className="text-sm text-carvao/60 mt-1">
+              Você está acessando pela primeira vez. Defina uma senha pessoal para continuar.
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="new-password" className="block text-sm font-medium text-carvao mb-1">
+              Nova senha
+            </label>
+            <input
+              id="new-password"
+              name="new-password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              autoComplete="new-password"
+              placeholder="Mínimo 6 caracteres"
+              className="w-full h-12 px-4 border border-carvao/15 rounded-xl text-carvao placeholder-carvao/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-anil focus-visible:border-anil transition-colors"
+            />
+          </div>
+          <div>
+            <label htmlFor="confirm-password" className="block text-sm font-medium text-carvao mb-1">
+              Confirmar senha
+            </label>
+            <input
+              id="confirm-password"
+              name="confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              autoComplete="new-password"
+              placeholder="••••••••"
+              className="w-full h-12 px-4 border border-carvao/15 rounded-xl text-carvao placeholder-carvao/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-anil focus-visible:border-anil transition-colors"
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+            />
+          </div>
+
+          {error && (
+            <p role="alert" aria-live="polite" className="text-sm text-retalho bg-retalho/10 px-4 py-2 rounded-lg">
+              {error}
+            </p>
+          )}
+
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !newPassword || !confirmPassword}
+            className="w-full h-12 bg-anil text-white font-medium rounded-xl disabled:opacity-50 active:scale-[0.98] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-anil-escuro focus-visible:ring-offset-2"
+          >
+            {loading ? "Salvando…" : "Definir senha"}
+          </button>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar senha</label>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="........"
-            className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900"
-            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-          />
-        </div>
-        {error && (
-          <p className="text-sm text-red-500 bg-red-50 px-4 py-2 rounded-lg">{error}</p>
-        )}
-        <button
-          onClick={handleSubmit}
-          disabled={loading || !newPassword || !confirmPassword}
-          className="w-full h-12 bg-gray-900 text-white font-medium rounded-xl disabled:opacity-50 active:scale-95 transition-transform"
-        >
-          {loading ? "Salvando..." : "Definir senha"}
-        </button>
       </div>
     </main>
   );
