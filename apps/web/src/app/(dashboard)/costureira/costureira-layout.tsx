@@ -37,11 +37,11 @@ export default function CostureiraLayout({
   const user = tokenStore.getUser();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-cru">
+      <header className="bg-white border-b border-carvao/10 px-4 py-3 flex items-center justify-between pt-safe">
         <div>
-          <p className="text-xs text-gray-400">Bem-vinda,</p>
-          <p className="text-sm font-semibold text-gray-900">
+          <p className="text-xs text-carvao/40">Bem-vinda,</p>
+          <p className="text-sm font-semibold text-carvao">
             {userName ?? "..."}
           </p>
         </div>
@@ -54,7 +54,7 @@ export default function CostureiraLayout({
             tokenStore.clearAuth();
             router.replace("/login");
           }}
-          className="text-xs text-gray-400 font-medium px-3 py-1.5 rounded-lg border border-gray-200"
+          className="min-h-11 min-w-11 px-3 text-xs text-carvao/50 font-medium rounded-lg border border-carvao/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-anil touch-manipulation"
         >
           Sair
         </button>
@@ -62,7 +62,7 @@ export default function CostureiraLayout({
       <main className="px-4 py-6">
         {ready ? children : (
           <div className="flex items-center justify-center py-20">
-            <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-carvao/15 border-t-anil rounded-full animate-spin" />
           </div>
         )}
       </main>

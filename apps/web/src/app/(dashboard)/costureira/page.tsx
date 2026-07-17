@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "@/lib/auth/api-client";
+import { WarpProgress } from "@/components/WarpProgress";
 
 import type { ProductionOrder, Operation, DailyHistory } from "@ordireos/db";
 
@@ -51,23 +52,23 @@ function StatsSection({ stats }: { stats: SeamstressStats }) {
   const hasEarnings = stats.month.estimatedEarnings > 0;
   return (
     <div className="grid grid-cols-2 gap-3">
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <p className="text-xs font-medium text-gray-400">Pecas esta semana</p>
-        <p className="text-2xl font-bold text-gray-900 mt-1">
+      <div className="bg-white rounded-2xl border border-carvao/10 shadow-sm p-4">
+        <p className="text-xs font-medium text-carvao/40">Pecas esta semana</p>
+        <p className="text-2xl font-bold font-display tabular text-carvao mt-1">
           {stats.week.pieces.toLocaleString("pt-BR")}
         </p>
-        <p className="text-xs text-gray-400 mt-0.5">ultimos 7 dias</p>
+        <p className="text-xs text-carvao/40 mt-0.5">ultimos 7 dias</p>
       </div>
-      <div className={`rounded-2xl border shadow-sm p-4 ${hasEarnings ? "bg-amber-600 border-amber-700" : "bg-white border-gray-100"}`}>
-        <p className="text-xs font-medium text-gray-400">Ganho estimado</p>
-        <p className={`text-2xl font-bold mt-1 ${hasEarnings ? "text-white" : "text-gray-900"}`}>
+      <div className={`rounded-2xl border shadow-sm p-4 ${hasEarnings ? "bg-novelo border-novelo" : "bg-white border-carvao/10"}`}>
+        <p className={`text-xs font-medium ${hasEarnings ? "text-white/60" : "text-carvao/40"}`}>Ganho estimado</p>
+        <p className={`text-2xl font-bold font-display tabular mt-1 ${hasEarnings ? "text-white" : "text-carvao"}`}>
           {hasEarnings ? formatCurrency(stats.month.estimatedEarnings) : "—"}
         </p>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <p className={`text-xs mt-0.5 ${hasEarnings ? "text-white/60" : "text-carvao/40"}`}>
           {stats.month.pieces.toLocaleString("pt-BR")} pcs no mes
         </p>
         {!hasEarnings && stats.month.pieces > 0 && (
-          <p className="text-xs text-gray-400 mt-1">operacoes sem preco nao entram no calculo</p>
+          <p className="text-xs text-carvao/40 mt-1">operacoes sem preco nao entram no calculo</p>
         )}
       </div>
     </div>
@@ -91,14 +92,14 @@ function LoadingSkeleton() {
   return (
     <div className="max-w-lg mx-auto space-y-4 animate-pulse">
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 h-24" />
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 h-24" />
+        <div className="bg-white rounded-2xl border border-carvao/10 p-4 h-24" />
+        <div className="bg-white rounded-2xl border border-carvao/10 p-4 h-24" />
       </div>
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
-        <div className="h-4 bg-gray-100 rounded w-1/3" />
-        <div className="h-12 bg-gray-100 rounded-xl" />
-        <div className="h-12 bg-gray-100 rounded-xl" />
-        <div className="h-14 bg-gray-100 rounded-xl" />
+      <div className="bg-white rounded-2xl border border-carvao/10 p-5 space-y-4">
+        <div className="h-4 bg-carvao/8 rounded w-1/3" />
+        <div className="h-12 bg-carvao/8 rounded-xl" />
+        <div className="h-12 bg-carvao/8 rounded-xl" />
+        <div className="h-14 bg-carvao/8 rounded-xl" />
       </div>
     </div>
   );
@@ -107,15 +108,15 @@ function LoadingSkeleton() {
 function HistoryTab({ history }: { history: SeamstressHistory | null }) {
   if (!history) return (
     <div className="flex items-center justify-center py-12">
-      <div className="w-5 h-5 border-2 border-gray-200 border-t-indigo-600 rounded-full animate-spin" />
+      <div className="w-5 h-5 border-2 border-carvao/15 border-t-anil rounded-full animate-spin" />
     </div>
   );
 
   if (history.days.length === 0) return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+    <div className="bg-white rounded-2xl border border-carvao/10 shadow-sm p-8 text-center">
       <p className="text-2xl mb-2">📊</p>
-      <p className="text-sm font-medium text-gray-700">Nenhum registro nos ultimos 30 dias</p>
-      <p className="text-xs text-gray-400 mt-1">Registre sua producao para ver o historico aqui.</p>
+      <p className="text-sm font-medium text-carvao/80">Nenhum registro nos ultimos 30 dias</p>
+      <p className="text-xs text-carvao/40 mt-1">Registre sua producao para ver o historico aqui.</p>
     </div>
   );
 
@@ -127,41 +128,39 @@ function HistoryTab({ history }: { history: SeamstressHistory | null }) {
     <div className="space-y-4">
       {/* Resumo 30 dias */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-          <p className="text-xs font-medium text-gray-400">Total 30 dias</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{totalPieces.toLocaleString("pt-BR")}</p>
-          <p className="text-xs text-gray-400 mt-0.5">pecas produzidas</p>
+        <div className="bg-white rounded-2xl border border-carvao/10 shadow-sm p-4">
+          <p className="text-xs font-medium text-carvao/40">Total 30 dias</p>
+          <p className="text-2xl font-bold font-display tabular text-carvao mt-1">{totalPieces.toLocaleString("pt-BR")}</p>
+          <p className="text-xs text-carvao/40 mt-0.5">pecas produzidas</p>
         </div>
         {totalEarnings > 0 && (
-          <div className="bg-gray-900 rounded-2xl border border-gray-800 shadow-sm p-4">
-            <p className="text-xs font-medium text-gray-400">Ganho 30 dias</p>
-            <p className="text-2xl font-bold text-white mt-1">{formatCurrency(totalEarnings)}</p>
-            <p className="text-xs text-gray-400 mt-0.5">estimado</p>
+          <div className="bg-carvao rounded-2xl border border-carvao shadow-sm p-4">
+            <p className="text-xs font-medium text-white/60">Ganho 30 dias</p>
+            <p className="text-2xl font-bold font-display tabular text-white mt-1">{formatCurrency(totalEarnings)}</p>
+            <p className="text-xs text-white/60 mt-0.5">estimado</p>
           </div>
         )}
       </div>
 
       {/* Lista por dia */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">Por dia</h2>
+      <div className="bg-white rounded-2xl border border-carvao/10 shadow-sm p-5">
+        <h2 className="text-sm font-semibold text-carvao/80 mb-4">Por dia</h2>
         <div className="space-y-3">
           {history.days.map((day) => {
             const barPct = maxPieces > 0 ? (day.pieces / maxPieces) * 100 : 0;
             return (
               <div key={day.date}>
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-gray-900">{formatDayLabel(day.date)}</p>
+                  <p className="text-sm font-medium text-carvao">{formatDayLabel(day.date)}</p>
                   <div className="text-right">
-                    <span className="text-sm font-bold text-gray-900">{day.pieces.toLocaleString("pt-BR")}</span>
-                    <span className="text-xs text-gray-400 ml-1">pcs</span>
+                    <span className="text-sm font-bold text-carvao tabular">{day.pieces.toLocaleString("pt-BR")}</span>
+                    <span className="text-xs text-carvao/40 ml-1">pcs</span>
                     {day.earnings > 0 && (
-                      <span className="text-xs text-gray-400 ml-2">{formatCurrency(day.earnings)}</span>
+                      <span className="text-xs text-carvao/40 ml-2">{formatCurrency(day.earnings)}</span>
                     )}
                   </div>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-1.5">
-                  <div className="bg-indigo-600 h-1.5 rounded-full transition-all" style={{ width: `${barPct}%` }} />
-                </div>
+                <WarpProgress value={barPct} label={`${formatDayLabel(day.date)}: ${day.pieces} pecas`} size="sm" />
               </div>
             );
           })}
@@ -302,11 +301,11 @@ export default function CostureiraPage() {
   if (error && orders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 px-4">
-        <div className="bg-red-50 rounded-2xl px-4 py-4 text-center w-full max-w-sm">
-          <p className="text-sm text-red-600">{error}</p>
+        <div role="alert" aria-live="polite" className="bg-retalho/10 rounded-2xl px-4 py-4 text-center w-full max-w-sm">
+          <p className="text-sm text-retalho">{error}</p>
         </div>
         <button onClick={() => { setError(""); setLoading(true); loadData(); }}
-          className="text-sm font-medium text-gray-900 underline">Tentar novamente</button>
+          className="text-sm font-medium text-carvao underline">Tentar novamente</button>
       </div>
     );
   }
@@ -316,8 +315,8 @@ export default function CostureiraPage() {
       <div className="flex items-center justify-center min-h-[60vh] px-4">
         <div className="text-center">
           <p className="text-2xl mb-2">📋</p>
-          <p className="text-sm font-medium text-gray-700">Nenhuma ordem disponivel</p>
-          <p className="text-xs text-gray-400 mt-1">Fale com seu supervisor.</p>
+          <p className="text-sm font-medium text-carvao/80">Nenhuma ordem disponivel</p>
+          <p className="text-xs text-carvao/40 mt-1">Fale com seu supervisor.</p>
         </div>
       </div>
     );
@@ -328,8 +327,8 @@ export default function CostureiraPage() {
       <div className="flex items-center justify-center min-h-[60vh] px-4">
         <div className="text-center">
           <p className="text-2xl mb-2">⚙️</p>
-          <p className="text-sm font-medium text-gray-700">Nenhuma operacao cadastrada</p>
-          <p className="text-xs text-gray-400 mt-1">Fale com seu supervisor.</p>
+          <p className="text-sm font-medium text-carvao/80">Nenhuma operacao cadastrada</p>
+          <p className="text-xs text-carvao/40 mt-1">Fale com seu supervisor.</p>
         </div>
       </div>
     );
@@ -345,8 +344,8 @@ export default function CostureiraPage() {
       <div className="flex gap-2">
         {(["registrar", "historico"] as Tab[]).map((t) => (
           <button key={t} onClick={() => setTab(t)}
-            className={`flex-1 h-10 rounded-xl text-sm font-medium transition-colors ${
-              tab === t ? "bg-indigo-600 text-white" : "bg-white border border-gray-200 text-gray-600"
+            className={`flex-1 h-11 rounded-xl text-sm font-medium transition-colors ${
+              tab === t ? "bg-anil text-white" : "bg-white border border-carvao/15 text-carvao/60"
             }`}>
             {t === "registrar" ? "Registrar" : "Historico"}
           </button>
@@ -357,22 +356,22 @@ export default function CostureiraPage() {
       {tab === "registrar" && (
         <>
           {success && (
-            <div className="bg-green-50 border border-green-100 rounded-2xl px-4 py-4 text-center">
+            <div role="status" aria-live="polite" className="bg-linha-verde/10 border border-linha-verde/20 rounded-2xl px-4 py-4 text-center">
               <p className="text-base">✅</p>
-              <p className="text-sm font-semibold text-green-700 mt-1">Producao registrada com sucesso!</p>
-              <p className="text-xs text-green-600 mt-1">Em caso de erro, fale com seu supervisor.</p>
+              <p className="text-sm font-semibold text-linha-verde mt-1">Producao registrada com sucesso!</p>
+              <p className="text-xs text-linha-verde mt-1">Em caso de erro, fale com seu supervisor.</p>
             </div>
           )}
 
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-gray-700">Registrar producao</h2>
+          <div className="bg-white rounded-2xl border border-carvao/10 shadow-sm p-5 space-y-4">
+            <h2 className="text-sm font-semibold text-carvao/80">Registrar producao</h2>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ordem de producao <span className="text-red-400">*</span>
+              <label htmlFor="order-select" className="block text-sm font-medium text-carvao/80 mb-1">
+                Ordem de producao <span className="text-retalho">*</span>
               </label>
-              <select value={selectedOrderId} onChange={(e) => { setSelectedOrderId(e.target.value); setError(""); }}
-                className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <select id="order-select" value={selectedOrderId} onChange={(e) => { setSelectedOrderId(e.target.value); setError(""); }}
+                className="w-full h-12 px-4 border border-carvao/15 rounded-xl text-carvao bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-anil">
                 <option value="">Selecione...</option>
                 {orders.map((order) => (
                   <option key={order.id} value={order.id}>
@@ -385,11 +384,11 @@ export default function CostureiraPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Operacao <span className="text-red-400">*</span>
+              <label htmlFor="operation-select" className="block text-sm font-medium text-carvao/80 mb-1">
+                Operacao <span className="text-retalho">*</span>
               </label>
-              <select value={selectedOperationId} onChange={(e) => { setSelectedOperationId(e.target.value); setError(""); }}
-                className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <select id="operation-select" value={selectedOperationId} onChange={(e) => { setSelectedOperationId(e.target.value); setError(""); }}
+                className="w-full h-12 px-4 border border-carvao/15 rounded-xl text-carvao bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-anil">
                 <option value="">Selecione...</option>
                 {operations.map((op) => (
                   <option key={op.id} value={op.id}>{op.name}</option>
@@ -398,71 +397,71 @@ export default function CostureiraPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Quantidade produzida <span className="text-red-400">*</span>
+              <label htmlFor="quantity-input" className="block text-sm font-medium text-carvao/80 mb-1">
+                Quantidade produzida <span className="text-retalho">*</span>
               </label>
-              <input type="number" inputMode="numeric" pattern="[0-9]*"
+              <input id="quantity-input" type="number" inputMode="numeric" pattern="[0-9]*"
                 value={quantity} onChange={(e) => { setQuantity(e.target.value); setError(""); }}
                 placeholder="0" min="1"
-                className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-lg font-medium" />
+                className="w-full h-12 px-4 border border-carvao/15 rounded-xl text-carvao placeholder-carvao/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-anil text-lg font-medium" />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Retrabalho <span className="text-gray-400 font-normal">(opcional)</span>
+              <label htmlFor="rework-input" className="block text-sm font-medium text-carvao/80 mb-1">
+                Retrabalho <span className="text-carvao/40 font-normal">(opcional)</span>
               </label>
-              <input type="number" inputMode="numeric" pattern="[0-9]*"
+              <input id="rework-input" type="number" inputMode="numeric" pattern="[0-9]*"
                 value={reworkQuantity} onChange={(e) => { setReworkQuantity(e.target.value); setError(""); }}
                 placeholder="0" min="0"
-                className="w-full h-12 px-4 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-lg font-medium" />
+                className="w-full h-12 px-4 border border-carvao/15 rounded-xl text-carvao placeholder-carvao/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-anil text-lg font-medium" />
             </div>
 
             {error && (
-              <div className="bg-red-50 rounded-xl px-4 py-3">
-                <p className="text-sm text-red-600">{error}</p>
+              <div role="alert" aria-live="polite" className="bg-retalho/10 rounded-xl px-4 py-3">
+                <p className="text-sm text-retalho">{error}</p>
               </div>
             )}
 
             <button onClick={handleSubmit} disabled={submitting}
-              className="w-full h-14 bg-indigo-600 text-white font-semibold rounded-xl disabled:opacity-60 active:scale-95 transition-all text-base flex items-center justify-center gap-2">
+              className="w-full h-14 bg-anil text-white font-semibold rounded-xl disabled:opacity-60 active:scale-95 transition-all text-base flex items-center justify-center gap-2">
               {submitting ? (
-                <><span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Registrando...</>
+                <><span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Registrando…</>
               ) : "Registrar producao"}
             </button>
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-carvao/10 shadow-sm p-5">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-gray-700">Meu dia</h2>
+              <h2 className="text-sm font-semibold text-carvao/80">Meu dia</h2>
               {history.total > 0 && (
-                <span className="text-sm font-bold text-gray-900">
+                <span className="text-sm font-bold text-carvao">
                   {history.total} {history.total === 1 ? "peca" : "pecas"}
                 </span>
               )}
             </div>
 
             {history.logs.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">Nenhum lancamento ainda hoje.</p>
+              <p className="text-sm text-carvao/40 text-center py-4">Nenhum lancamento ainda hoje.</p>
             ) : (
               <div className="space-y-2">
                 {history.logs.map((log) => (
-                  <div key={log.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                  <div key={log.id} className="flex items-center justify-between py-2 border-b border-carvao/5 last:border-0">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{log.operationName}</p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-sm font-medium text-carvao">{log.operationName}</p>
+                      <p className="text-xs text-carvao/40">
                         {log.orderReference}
                         {log.shift ? ` · ${SHIFT_LABELS[log.shift]}` : ""}
                         {" · "}{formatTime(log.loggedAt.toString())}
                       </p>
                       {log.reworkQuantity > 0 && (
-                        <p className="text-xs text-orange-500">
+                        <p className="text-xs text-novelo">
                           {log.reworkQuantity} {log.reworkQuantity === 1 ? "peca" : "pecas"} de retrabalho
                         </p>
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-gray-900">{log.quantity}</p>
-                      <p className="text-xs text-gray-400">pecas</p>
+                      <p className="text-sm font-bold text-carvao">{log.quantity}</p>
+                      <p className="text-xs text-carvao/40">pecas</p>
                     </div>
                   </div>
                 ))}
