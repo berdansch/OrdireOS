@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { apiClient } from "@/lib/auth/api-client";
 import { WarpProgress } from "@/components/WarpProgress";
+import { TimeSeriesChart } from "@/components/TimeSeriesChart";
 
 type Period = "today" | "week" | "month" | "custom";
 
@@ -273,7 +274,9 @@ function LoadingSkeleton() {
   );
 }
 
-function DashboardContent({ data }: { data: DashboardData }) {
+type TimeSeriesPoint = { date: string; pieces: number; reworkPieces: number };
+
+function DashboardContent({ data, series, seriesLoading }: { data: DashboardData; series: TimeSeriesPoint[]; seriesLoading: boolean }) {
   const totalShift = data.byShift.morning + data.byShift.afternoon + data.byShift.night;
   const totalCost = data.byOperation.reduce((acc, op) => acc + op.totalCost, 0);
   const costPerPiece = data.totalPieces > 0 ? totalCost / data.totalPieces : 0;
@@ -281,6 +284,11 @@ function DashboardContent({ data }: { data: DashboardData }) {
 
   return (
     <div className="space-y-4">
+      <div className="bg-white rounded-2xl border border-carvao/10 shadow-sm p-5">
+        <h2 className="text-sm font-semibold text-carvao/80 mb-3">Evolucao da producao</h2>
+        <TimeSeriesChart series={series} loading={seriesLoading} />
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <StatCard label="Total produzido" value={data.totalPieces.toLocaleString("pt-BR")} sub="pecas no periodo" highlight />
         <StatCard label="Taxa de retrabalho" value={`${data.reworkRate.toFixed(1)}%`} sub={`${data.totalRework} pecas`} />
@@ -461,6 +469,9 @@ export default function OwnerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [series, setSeries] = useState<TimeSeriesPoint[]>([]);
+  const [seriesLoading, setSeriesLoading] = useState(true);
+
   // Polling do summary a cada 60s + refresh ao voltar para a aba
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -509,6 +520,23 @@ export default function OwnerDashboardPage() {
   useEffect(() => {
     if (period !== "custom") loadDashboard();
   }, [period, loadDashboard]);
+
+  const loadSeries = useCallback(async () => {
+    setSeriesLoading(true);
+    try {
+      const result = await apiClient<{ days: number; series: TimeSeriesPoint[] }>("/dashboard/timeseries?days=30");
+      setSeries(result.series);
+    } catch {
+      // falha silenciosa — grafico mostra estado vazio, resto do dashboard segue funcionando
+      setSeries([]);
+    } finally {
+      setSeriesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSeries();
+  }, [loadSeries]);
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-8">
@@ -583,7 +611,7 @@ export default function OwnerDashboardPage() {
           </button>
         </div>
       ) : data ? (
-        <DashboardContent data={data} />
+        <DashboardContent data={data} series={series} seriesLoading={seriesLoading} />
       ) : null}
     </div>
   );

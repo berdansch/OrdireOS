@@ -8,6 +8,63 @@ import { requireActivePlan } from "../middleware/requireActivePlan";
 
 export const dashboardRoutes = new Hono<AppContext>();
 
+// GET /dashboard/timeseries — producao diaria dos ultimos N dias, para o
+// grafico de evolucao (linha) do dashboard. Query param opcional ?days=30
+// (min 7, max 90). Retorna um ponto por dia, incluindo dias sem producao
+// (zero-filled) para que o grafico nao tenha buracos.
+dashboardRoutes.get("/timeseries", authMiddleware, requireActivePlan, requireRole(["owner", "supervisor"]), async (c) => {
+  const { tenant_id } = c.get("auth");
+  const db = createDb(c.env.DATABASE_URL);
+
+  const daysParam = parseInt(c.req.query("days") ?? "30", 10);
+  const days = Number.isFinite(daysParam) ? Math.min(Math.max(daysParam, 7), 90) : 30;
+
+  // Limite do dia em 00:00 BRT (03:00 UTC) — mesmo padrao usado em
+  // /summary e em production-logs.ts para consistencia entre telas.
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setUTCHours(3, 0, 0, 0);
+  if (now.getTime() < todayStart.getTime()) {
+    todayStart.setUTCDate(todayStart.getUTCDate() - 1);
+  }
+  const rangeStart = new Date(todayStart.getTime() - (days - 1) * 24 * 60 * 60 * 1000);
+  const rangeStartIso = rangeStart.toISOString();
+
+  const logs = await db
+    .select({ quantity: productionLogs.quantity, reworkQuantity: productionLogs.reworkQuantity, loggedAt: productionLogs.loggedAt })
+    .from(productionLogs)
+    .where(
+      and(
+        eq(productionLogs.tenantId, tenant_id),
+        sql`${productionLogs.loggedAt} >= ${rangeStartIso}::timestamptz`,
+      )
+    );
+
+  // Agrupa por dia em BRT (UTC-3), zero-filled para nao ter buracos no grafico
+  const dayMap = new Map<string, { pieces: number; reworkPieces: number }>();
+  for (let i = 0; i < days; i++) {
+    const d = new Date(rangeStart.getTime() + i * 24 * 60 * 60 * 1000);
+    const key = d.toISOString().slice(0, 10);
+    dayMap.set(key, { pieces: 0, reworkPieces: 0 });
+  }
+
+  for (const log of logs) {
+    const brt = new Date(new Date(log.loggedAt).getTime() - 3 * 60 * 60 * 1000);
+    const key = brt.toISOString().slice(0, 10);
+    const existing = dayMap.get(key);
+    if (existing) {
+      existing.pieces += log.quantity;
+      existing.reworkPieces += log.reworkQuantity;
+    }
+  }
+
+  const series = Array.from(dayMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, v]) => ({ date, pieces: v.pieces, reworkPieces: v.reworkPieces }));
+
+  return c.json({ days, series });
+});
+
 // GET /dashboard/summary — KPIs leves para o topo do painel do owner e do
 // supervisor (polling a cada 60s). Endpoint que faltava por completo no
 // backend — era a causa raiz do "Nao foi possivel carregar os dados" no
