@@ -54,7 +54,7 @@ app.use("*", cors({
     return null; // nunca "*": requisicoes sem Origin ou fora da allowlist sao bloqueadas
   },
   allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-  allowHeaders: ["Content-Type", "Authorization"],
+  allowHeaders: ["Content-Type", "Authorization", "x-admin-secret"],
   credentials: true,
 }));
 
