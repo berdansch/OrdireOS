@@ -8,65 +8,21 @@ import { requireActivePlan } from "../middleware/requireActivePlan";
 
 export const payrollRoutes = new Hono<AppContext>();
 
-// GET /payroll/periods — lista períodos do tenant
-payrollRoutes.get("/periods", authMiddleware, requireActivePlan, requireRole(["owner"]), async (c) => {
-  const { tenant_id } = c.get("auth");
-  const db = createDb(c.env.DATABASE_URL);
-
-  const periods = await db
-    .select()
-    .from(payrollPeriods)
-    .where(eq(payrollPeriods.tenantId, tenant_id))
-    .orderBy(sql`${payrollPeriods.createdAt} DESC`);
-
-  return c.json(periods);
-});
-
-// POST /payroll/periods — abre novo período
-payrollRoutes.post("/periods", authMiddleware, requireActivePlan, requireRole(["owner"]), async (c) => {
-  const { tenant_id } = c.get("auth");
-  const body = await c.req.json<{ startDate?: string; endDate?: string }>();
-
-  if (!body.startDate || !/^\d{4}-\d{2}-\d{2}$/.test(body.startDate)) return c.json({ error: "startDate obrigatorio (YYYY-MM-DD)" }, 400);
-  if (!body.endDate || !/^\d{4}-\d{2}-\d{2}$/.test(body.endDate)) return c.json({ error: "endDate obrigatorio (YYYY-MM-DD)" }, 400);
-  if (body.startDate >= body.endDate) return c.json({ error: "startDate deve ser anterior a endDate" }, 400);
-
-  const db = createDb(c.env.DATABASE_URL);
-
-  const [existing] = await db
-    .select({ id: payrollPeriods.id })
-    .from(payrollPeriods)
-    .where(
-      and(
-        eq(payrollPeriods.tenantId, tenant_id),
-        sql`${payrollPeriods.status} = 'open'`,
-      )
-    )
-    .limit(1);
-
-  if (existing) return c.json({ error: "Ja existe um periodo de folha aberto. Feche-o antes de abrir um novo." }, 409);
-
-  const [period] = await db
-    .insert(payrollPeriods)
-    .values({ tenantId: tenant_id, startDate: body.startDate, endDate: body.endDate })
-    .returning();
-
-  return c.json(period, 201);
-});
-
-// GET /payroll/periods/:id — calcula folha ao vivo
-payrollRoutes.get("/periods/:id", authMiddleware, requireActivePlan, requireRole(["owner"]), async (c) => {
-  const { tenant_id } = c.get("auth");
-  const periodId = c.req.param("id");
-  const db = createDb(c.env.DATABASE_URL);
-
+// Calculo compartilhado da folha de um periodo — usado tanto pelo endpoint
+// JSON (GET /periods/:id) quanto pelo export CSV (GET /periods/:id/export).
+// Evita duplicar a mesma query/agregacao em dois lugares.
+async function calculatePeriodPayroll(
+  db: ReturnType<typeof createDb>,
+  tenant_id: string,
+  periodId: string
+) {
   const [period] = await db
     .select()
     .from(payrollPeriods)
     .where(and(eq(payrollPeriods.id, periodId), eq(payrollPeriods.tenantId, tenant_id)))
     .limit(1);
 
-  if (!period) return c.json({ error: "Periodo nao encontrado" }, 404);
+  if (!period) return null;
 
   const logs = await db
     .select({
@@ -172,7 +128,7 @@ payrollRoutes.get("/periods/:id", authMiddleware, requireActivePlan, requireRole
   const totalAdvances = seamstresses.reduce((sum, s) => sum + s.advances, 0);
   const totalNet = seamstresses.reduce((sum, s) => sum + s.netEarnings, 0);
 
-  return c.json({
+  return {
     period,
     seamstresses,
     advances: periodAdvances,
@@ -180,6 +136,139 @@ payrollRoutes.get("/periods/:id", authMiddleware, requireActivePlan, requireRole
       grossEarnings: Math.round(totalGross * 100) / 100,
       advances: Math.round(totalAdvances * 100) / 100,
       netEarnings: Math.round(totalNet * 100) / 100,
+    },
+  };
+}
+
+// Escapa um campo para CSV: envolve em aspas se contiver o separador,
+// aspas ou quebra de linha; aspas internas viram aspas duplas.
+function csvField(value: string): string {
+  if (/[;"\n]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
+// Formata numero no padrao BR (virgula decimal) — Excel BR le CSV com
+// ";" como separador de campo e "," como separador decimal.
+function csvNumber(value: number): string {
+  return value.toFixed(2).replace(".", ",");
+}
+
+// GET /payroll/periods — lista períodos do tenant
+payrollRoutes.get("/periods", authMiddleware, requireActivePlan, requireRole(["owner"]), async (c) => {
+  const { tenant_id } = c.get("auth");
+  const db = createDb(c.env.DATABASE_URL);
+
+  const periods = await db
+    .select()
+    .from(payrollPeriods)
+    .where(eq(payrollPeriods.tenantId, tenant_id))
+    .orderBy(sql`${payrollPeriods.createdAt} DESC`);
+
+  return c.json(periods);
+});
+
+// POST /payroll/periods — abre novo período
+payrollRoutes.post("/periods", authMiddleware, requireActivePlan, requireRole(["owner"]), async (c) => {
+  const { tenant_id } = c.get("auth");
+  const body = await c.req.json<{ startDate?: string; endDate?: string }>();
+
+  if (!body.startDate || !/^\d{4}-\d{2}-\d{2}$/.test(body.startDate)) return c.json({ error: "startDate obrigatorio (YYYY-MM-DD)" }, 400);
+  if (!body.endDate || !/^\d{4}-\d{2}-\d{2}$/.test(body.endDate)) return c.json({ error: "endDate obrigatorio (YYYY-MM-DD)" }, 400);
+  if (body.startDate >= body.endDate) return c.json({ error: "startDate deve ser anterior a endDate" }, 400);
+
+  const db = createDb(c.env.DATABASE_URL);
+
+  const [existing] = await db
+    .select({ id: payrollPeriods.id })
+    .from(payrollPeriods)
+    .where(
+      and(
+        eq(payrollPeriods.tenantId, tenant_id),
+        sql`${payrollPeriods.status} = 'open'`,
+      )
+    )
+    .limit(1);
+
+  if (existing) return c.json({ error: "Ja existe um periodo de folha aberto. Feche-o antes de abrir um novo." }, 409);
+
+  const [period] = await db
+    .insert(payrollPeriods)
+    .values({ tenantId: tenant_id, startDate: body.startDate, endDate: body.endDate })
+    .returning();
+
+  return c.json(period, 201);
+});
+
+// GET /payroll/periods/:id — calcula folha ao vivo
+payrollRoutes.get("/periods/:id", authMiddleware, requireActivePlan, requireRole(["owner"]), async (c) => {
+  const { tenant_id } = c.get("auth");
+  const periodId = c.req.param("id");
+  const db = createDb(c.env.DATABASE_URL);
+
+  const result = await calculatePeriodPayroll(db, tenant_id, periodId);
+  if (!result) return c.json({ error: "Periodo nao encontrado" }, 404);
+
+  return c.json(result);
+});
+
+// GET /payroll/periods/:id/export — folha em CSV, pronta para abrir no
+// Excel e enviar ao contador. Separador ";" e decimal "," (padrao BR).
+payrollRoutes.get("/periods/:id/export", authMiddleware, requireActivePlan, requireRole(["owner"]), async (c) => {
+  const { tenant_id } = c.get("auth");
+  const periodId = c.req.param("id");
+  const db = createDb(c.env.DATABASE_URL);
+
+  const result = await calculatePeriodPayroll(db, tenant_id, periodId);
+  if (!result) return c.json({ error: "Periodo nao encontrado" }, 404);
+
+  const { period, seamstresses, advances: periodAdvances, totals } = result;
+
+  const lines: string[] = [];
+  lines.push(`Folha de pagamento;${period.startDate} a ${period.endDate}`);
+  lines.push(`Status;${period.status === "closed" ? "Fechado" : "Aberto"}`);
+  lines.push("");
+  lines.push(["Colaboradora", "Pecas", "Bruto (R$)", "Vales (R$)", "Liquido (R$)"].map(csvField).join(";"));
+  for (const s of seamstresses) {
+    lines.push([
+      csvField(s.userName),
+      String(s.pieces),
+      csvNumber(s.grossEarnings),
+      csvNumber(s.advances),
+      csvNumber(s.netEarnings),
+    ].join(";"));
+  }
+  lines.push([
+    csvField("TOTAL"),
+    String(seamstresses.reduce((sum, s) => sum + s.pieces, 0)),
+    csvNumber(totals.grossEarnings),
+    csvNumber(totals.advances),
+    csvNumber(totals.netEarnings),
+  ].join(";"));
+
+  if (periodAdvances.length > 0) {
+    lines.push("");
+    lines.push(["Vales detalhados"].map(csvField).join(";"));
+    lines.push(["Colaboradora", "Valor (R$)", "Observacao", "Data"].map(csvField).join(";"));
+    for (const adv of periodAdvances) {
+      lines.push([
+        csvField(adv.userName),
+        csvNumber(parseFloat(adv.amount)),
+        csvField(adv.note ?? ""),
+        csvField(new Date(adv.createdAt).toLocaleDateString("pt-BR")),
+      ].join(";"));
+    }
+  }
+
+  // BOM UTF-8 — sem isso o Excel abre acentos (ç, ã, é) corrompidos
+  const csv = "\uFEFF" + lines.join("\r\n");
+  const filename = `folha-${period.startDate}-a-${period.endDate}.csv`;
+
+  return new Response(csv, {
+    headers: {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${filename}"`,
     },
   });
 });
